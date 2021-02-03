@@ -9,4 +9,4 @@ flake8:
 	@echo "flake8 passed"
 
 test:
-	py.test --pyargs fmri_pcarpet --cov-report term-missing --cov=fmri_pcarpet
+	py.test --pyargs pcarpet --cov-report term-missing --cov=pcarpet

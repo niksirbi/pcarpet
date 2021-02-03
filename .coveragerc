@@ -1,7 +1,7 @@
 [run]
 branch = True
-source = fmri_pcarpet/*
-include = fmri_pcarpet/*
+source = pcarpet/*
+include = pcarpet/*
 omit = */setup.py
 [report]
-include = fmri_pcarpet/*
+include = pcarpet/*

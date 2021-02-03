@@ -5,7 +5,7 @@ API
 Classes
 -------
 
-.. currentmodule:: fmri_pcarpet
+.. currentmodule:: pcarpet
 
 .. autosummary::
    :template: class.rst

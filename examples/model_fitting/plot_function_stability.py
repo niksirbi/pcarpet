@@ -3,14 +3,14 @@
 Plotting model stability
 ========================
 
-Next we'll show off another demonstration of model fitting with fmri_pcarpet.
+Next we'll show off another demonstration of model fitting with pcarpet.
 We'll generate a bunch of data with varying levels of signal to noise, and then
 show the stability of the model coefficients for each set of data.
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
-import fmri_pcarpet as sb
+import pcarpet as sb
 plt.style.use('ggplot')
 
 # Set seed for reproducibility
