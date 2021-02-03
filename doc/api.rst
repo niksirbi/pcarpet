@@ -5,7 +5,7 @@ API
 Classes
 -------
 
-.. currentmodule:: shablona
+.. currentmodule:: fmri_pcarpet
 
 .. autosummary::
    :template: class.rst

@@ -1,7 +1,7 @@
 [run]
 branch = True
-source = shablona/*
-include = shablona/*
+source = fmri_pcarpet/*
+include = fmri_pcarpet/*
 omit = */setup.py
 [report]
-include = shablona/*
+include = fmri_pcarpet/*

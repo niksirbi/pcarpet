@@ -23,4 +23,4 @@ install:
 test_script:
   - mkdir for_test
   - cd for_test
-  - py.test --pyargs shablona --cov-report term-missing --cov=shablona
+  - py.test --pyargs fmri_pcarpet --cov-report term-missing --cov=fmri_pcarpet
