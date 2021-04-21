@@ -3,10 +3,43 @@ import os
 import numpy as np
 import pandas as pd
 import nibabel as nib
+from scipy.stats import zscore
 import scipy.optimize as opt
 from scipy.special import erf
 
 __all__ = ["Model", "Fit", "opt_err_func", "transform_data", "cumgauss"]
+
+# Small value added to some denominators to avoid zero division
+EPSILON = 1e-9
+
+
+def pearsonr_2d(A, B):
+    """Calculate row-wise Pearson's correlation between 2 2d-arrays
+
+    Parameters
+    ----------
+    A : 2d-array
+        shape N x T
+    B : 2d-array
+        shape M x T
+    Returns
+    -------
+    R : 2d-array
+        N x M shaped correlation matrix between all row combinations of A and B
+    """
+
+    #  Subtract row-wise mean from input arrays
+    A_mA = A - A.mean(1)[:, None]
+    B_mB = B - B.mean(1)[:, None]
+
+    # Sum of squares across rows
+    ssA = (A_mA ** 2).sum(1)
+    ssB = (B_mB ** 2).sum(1)
+
+    # Finally get and return correlation coefficient
+    numerator = np.dot(A_mA, B_mB.T)
+    denominator = np.sqrt(np.dot(ssA[:, None], ssB[None])) + EPSILON
+    return numerator / denominator
 
 
 def transform_data(data):
@@ -205,6 +238,47 @@ class Dataset(object):
         self.affine = mask_nifti.affine
 
         return data, mask
+
+    def get_carpet(self, reorder=True):
+
+        # compute fMRI data mean, std, and tSNR across time
+        data_mean = self.data.mean(axis=-1, keepdims=True)
+        data_std = self.data.std(axis=-1, keepdims=True)
+        data_tsnr = data_mean / (data_std + EPSILON)
+
+        # Mask fMRI data array with 'mask'
+        # Also mask voxels below tSNR threshold (if given)
+        mask = self.mask < 0.5
+        mask_4d = np.repeat(mask[:, :, :, np.newaxis], self.t, axis=3)
+        tsnr_mask_4d = np.zeros(mask_4d.shape, dtype=bool)
+        if self.tSNR_thresh is not None:
+            tsnr_mask = data_tsnr.squeeze() < self.tSNR_thresh
+            tsnr_mask_4d = np.repeat(tsnr_mask[:, :, :, np.newaxis],
+                                     self.t, axis=3)
+        data_masked = np.ma.masked_where(mask_4d | tsnr_mask_4d, self.data)
+
+        # Reshape data in 2-d (voxels x time)
+        data_2d = data_masked.reshape((-1, self.t))
+        print(f"fMRI data reshaped to voxels x time {data_2d.shape}")
+        # Get indices for non-masked rows (voxels)
+        indices_valid = np.where(np.any(~np.ma.getmask(data_2d), axis=1))[0]
+        print(f"{len(indices_valid)} voxels retained after masking")
+        # Keep only valid rows in carpet matrix
+        carpet = data_2d[indices_valid, :]
+        print(f"Carpet matrix created with shape {carpet.shape}")
+        # Normalize carpet (z-score)
+        carpet = zscore(carpet, axis=1)
+        print(f"Carpet matrix normalized to zero-mean unit-variance")
+
+        # Re-order carpet plot based on correlation with the global signal
+        if reorder:
+            gs = np.mean(carpet, axis=0)
+            gs_corr = pearsonr_2d(carpet, gs.reshape((1, self.t))).flatten()
+            sort_index = [int(i) for i in np.flip(np.argsort(gs_corr))]
+            carpet = carpet[sort_index, :]
+            print(f"Carpet matrix reordered")
+
+        return(carpet)
 
 
 class Model(object):
