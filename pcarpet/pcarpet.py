@@ -1,6 +1,8 @@
 from __future__ import absolute_import, division, print_function
+import os
 import numpy as np
 import pandas as pd
+import nibabel as nib
 import scipy.optimize as opt
 from scipy.special import erf
 
@@ -117,6 +119,92 @@ def opt_err_func(params, x, y, func):
         The marginals of the fit to x/y given the params
     """
     return y - func(x, *params)
+
+
+class Dataset(object):
+    """Class for generating carpet plot from fMRI data and fitting PCA to it"""
+    def __init__(self, fmri_file, mask_file,
+                 TR=2.0, tSNR_thresh=15.0, ncomp=5):
+        """ Initialize a Dataset object and import data.
+
+        Parameters
+        ----------
+        fmri_file : path
+            Path to 4-D (3-D + time) functional MRI data in NIFTI format.
+        mask_file : path
+            Path to 3-D cmask in NIFTI format (e.g. cortical mask).
+            Must have same coordinate space and data matrix as :fmri:
+        TR : float
+            Repetition time (in seconds)
+            Default: :TR:2
+        tSNR_thresh: float
+            Voxels with tSNR values below this threshold will not be used.
+            To deactivate set to `None`
+            Default: :tSNR_thresh:15.0
+        ncomp : int
+            Number of PCA components to retain.
+            These are displayed in the plot and used for computing correlations
+            Default: :ncomp:5
+        """
+        # Read parameters
+        self.fmri_file = fmri_file
+        self.mask_file = mask_file
+        self.TR = TR
+        self.tSNR_thresh = tSNR_thresh
+        self.ncomp = ncomp
+        # Call initializing functions
+        self.data, self.mask = self.import_data()
+
+    def import_data(self):
+        """ Load fMRI and cortex_mask data using nibabel.
+
+        Returns
+        -------
+        data : array
+            A 4-D array containing fMRI data
+        mask :
+            A 3-D array containing mask data
+        """
+
+        # Check if input files exist and try importing them with nibabel
+        if os.path.isfile(self.fmri_file):
+            try:
+                fmri_nifti = nib.load(self.fmri_file)
+            except IOError:
+                print(f"Could not load {self.fmri_file} using nibabel.")
+                print("Make sure it's a valid NIFTI file.")
+        else:
+            print(f"Could not find {self.fmri_file} file ")
+
+        if os.path.isfile(self.mask_file):
+            try:
+                mask_nifti = nib.load(self.mask_file)
+            except IOError:
+                print(f"Could not load {self.mask_file} using nibabel.")
+                print("Make sure it's a valid NIFTI file.")
+        else:
+            print(f"Could not find {self.mask_file} file ")
+
+        # Ensure that data dimensions are correct
+        data = fmri_nifti.get_fdata()
+        mask = mask_nifti.get_fdata()
+        print(f"fMRI data read: dimensions {data.shape}")
+        print(f"Cortex mask read: dimensions {mask.shape}")
+        if len(data.shape) != 4:
+            raise ValueError('fMRI must be 4-dimensional!')
+        if len(mask.shape) != 3:
+            raise ValueError('cortex_mask must be 4-dimensional!')
+        if data.shape[:3] != mask.shape:
+            raise ValueError('fMRI and cortex_mask must be in the same space')
+
+        # read and store data dimensions
+        self.x, self.y, self.z, self.t = data.shape
+        # read header and affine from cortex_mask
+        # will be used for saving NIFTI maps later
+        self.header = mask_nifti.header
+        self.affine = mask_nifti.affine
+
+        return data, mask
 
 
 class Model(object):
