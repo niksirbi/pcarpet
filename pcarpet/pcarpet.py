@@ -50,9 +50,9 @@ class Dataset(object):
         Parameters
         ----------
         fmri_file : str
-            Path to 4-D (3-D + time) functional MRI data in NIFTI format.
+            Path to 4d (3d + time) functional MRI data in NIFTI format.
         mask_file : str
-            Path to 3-D cmask in NIFTI format (e.g. cortical mask).
+            Path to 3d cmask in NIFTI format (e.g. cortical mask).
             Must have same coordinate space and data matrix as :fmri:
         output_dir : str
             Path to folder where results will be saved.
@@ -73,7 +73,7 @@ class Dataset(object):
                 print("Could not create 'output_dir'")
         self.output_dir = output_dir
 
-        print("\nInitialized Dataset object")
+        print("\nInitialized Dataset object:")
         print(f"\tfMRI file: {fmri_file}")
         print(f"\tMask file: {mask_file}")
         print(f"\tOutput directory: {output_dir}")
@@ -89,9 +89,9 @@ class Dataset(object):
         Returns
         -------
         data : array
-            A 4-D array containing fMRI data
+            A 4d array containing fMRI data
         mask :
-            A 3-D array containing mask data
+            A 3d array containing mask data
         """
 
         # Check if input files exist and try importing them with nibabel
@@ -102,7 +102,7 @@ class Dataset(object):
                 print(f"Could not load {self.fmri_file} using nibabel.")
                 print("Make sure it's a valid NIFTI file.")
         else:
-            print(f"Could not find {self.fmri_file} file ")
+            print(f"Could not find {self.fmri_file} file.")
 
         if os.path.isfile(self.mask_file):
             try:
@@ -111,19 +111,19 @@ class Dataset(object):
                 print(f"Could not load {self.mask_file} using nibabel.")
                 print("Make sure it's a valid NIFTI file.")
         else:
-            print(f"Could not find {self.mask_file} file ")
+            print(f"Could not find {self.mask_file} file.")
 
         # Ensure that data dimensions are correct
         data = fmri_nifti.get_fdata()
         mask = mask_nifti.get_fdata()
-        print(f"fMRI data read: dimensions {data.shape}")
-        print(f"Cortex mask read: dimensions {mask.shape}")
+        print(f"\tfMRI data read: dimensions {data.shape}")
+        print(f"\tMask read: dimensions {mask.shape}")
         if len(data.shape) != 4:
             raise ValueError('fMRI must be 4-dimensional!')
         if len(mask.shape) != 3:
-            raise ValueError('cortex_mask must be 4-dimensional!')
+            raise ValueError('Mask must be 3-dimensional!')
         if data.shape[:3] != mask.shape:
-            raise ValueError('fMRI and cortex_mask must be in the same space')
+            raise ValueError('fMRI and mask must be in the same space!')
 
         # read and store data dimensions
         self.x, self.y, self.z, self.t = data.shape
@@ -135,27 +135,23 @@ class Dataset(object):
         return data, mask
 
     def get_carpet(self, tSNR_thresh=15.0, reorder=True, save=True):
-        """ Makes a carpet plot from fMRI data
+        """ Makes a carpet matrix from fMRI data.
+        A carpet is a 2d matrix shaped voxels x time which contains
+        the normalized (z-score) BOLD-fMRI signal from within a mask
 
         Parameters
         ----------
-        tSNR_thresh: float
-            Voxels with tSNR values below this threshold will not be used.
+        tSNR_thresh : float
+            Voxels with tSNR values below this threshold will be excluded.
             To deactivate set to `None`
             Default: 15.0
-        reorder: boolean
+        reorder : boolean
             Whether to reorder carpet voxels according to their (decreasing)
-            correlation with the global (mean across voxesl) signal
+            correlation with the global (mean across voxels) signal
             Default: True
-        save: boolean
+        save : boolean
             Whether to save the carpet matrix in the output directory.
             Default: True
-
-        Returns
-        -------
-        carpet : array
-            A 2-D array (voxels x time).
-            Contains normalized fMRI data from within a mask.
         """
 
         # compute fMRI data mean, std, and tSNR across time
@@ -176,18 +172,18 @@ class Dataset(object):
 
         # Reshape data in 2-d (voxels x time)
         data_2d = data_masked.reshape((-1, self.t))
-        print(f"fMRI data reshaped to voxels x time {data_2d.shape}")
+        print(f"fMRI data reshaped to voxels x time {data_2d.shape}.")
 
         # Get indices for non-masked rows (voxels)
         indices_valid = np.where(np.any(~np.ma.getmask(data_2d), axis=1))[0]
-        print(f"{len(indices_valid)} voxels retained after masking")
+        print(f"{len(indices_valid)} voxels retained after masking.")
         # Keep only valid rows in carpet matrix
-        carpet = data_2d[indices_valid, :]
-        print(f"Carpet matrix created with shape {carpet.shape}")
+        carpet = data_2d[indices_valid, :].data
+        print(f"Carpet matrix created with shape {carpet.shape}.")
 
         # Normalize carpet (z-score)
         carpet = zscore(carpet, axis=1)
-        print(f"Carpet matrix normalized to zero-mean unit-variance")
+        print(f"Carpet matrix normalized to zero-mean unit-variance.")
 
         # Re-order carpet plot based on correlation with the global signal
         if reorder:
@@ -195,35 +191,48 @@ class Dataset(object):
             gs_corr = pearsonr_2d(carpet, gs.reshape((1, self.t))).flatten()
             sort_index = [int(i) for i in np.flip(np.argsort(gs_corr))]
             carpet = carpet[sort_index, :]
-            print('Carpet reordered')
+            print('Carpet reordered.')
 
         # Save carpet to npy file
         if save:
-            np.save(os.path.join(self.output_dir, 'carpet_reordered.npy'),
-                    carpet.data)
-            print("Carpet matrix saved as 'carpet.npy'")
+            np.save(os.path.join(self.output_dir, 'carpet.npy'), carpet)
+            print("Carpet matrix saved as 'carpet.npy'.")
 
         self.carpet = carpet
         return
 
-    def fit_pca_and_correlate(self, ncomp=5, save_pca_scores=False):
+    def fit_pca_and_correlate(self, ncomp=5, save_pca_scores=False,
+                              flip_sign=True):
         """ Fits PCA to carpet and correlates the first
-        :ncomp: components with all voxel time-series.
-        Saves PCs and explained variance ratio
+        :ncomp: components with all carpet voxel time-series.
+        Saves results of PCA and correlation.
 
         Parameters
         ----------
-        carpet : array
-            2-D carpet matrix (voxels x time)
         ncomp : int
             Number of PCA components to retain.
             These are correlated with all carpet voxels
             Default: 5
-        save_pca_scores: boolean
+        save_pca_scores : boolean
             Whether to save the PCA scores (transformed carpet)
             in the output directory.
             Default: False
+        flip_sign : boolean
+            If True, a PC (and its correlation with carpet voxels)
+            will be sign-flipped when the median of its original
+            correlation with carpet voxels is negative.
+            This enforces the sign of the PC to match the sign of
+            the BOLD signal activity for most voxels. This applies
+            only to the first :ncomp: PCs.The sign-flipped PCs are only
+            used for downstream analysis and visualization (the saved
+            PCA components, scores, and report have the original sign).
+            Default: True
         """
+
+        try:
+            self.ncomp = int(ncomp)
+        except ValueError:
+            print("'ncomp' must be an integer!")
 
         # Fit PCA
         model = PCA(whiten=True)
@@ -245,8 +254,28 @@ class Dataset(object):
                            columns=comp_names)
         PCs.to_csv(os.path.join(self.output_dir,
                    f'pca_components_{ncomp}.csv'), index=False)
-        self.PCs = PCs
+        print("PCA fit to carpet matrix and results saved.")
 
         # Correlate first ncomp PCs with carpet matrix
+        # to get correlation matrix (voxels x ncom)
+        PC_carpet_R = pearsonr_2d(self.carpet, PCs.values.T)
+        print(f"First {ncomp} PCs correlated with carpet.")
 
+        # Construct table reporting various metrics for each PC
+        report = pd.DataFrame()
+        report.loc[:, 'PC'] = comp_names
+        report.loc[:, 'expl_var'] = self.expl_var[:ncomp]
+        report.loc[:, 'carpet_R_median'] = [np.median(PC_carpet_R[:, i])
+                                            for i in range(ncomp)]
+        report.to_csv(os.path.join(self.output_dir,
+                      'pca_carpet_correlation_report.csv'),
+                      index=False)
+        if flip_sign:
+            for i, c in enumerate(PCs):
+                if report['carpet_R_median'].values[i] < 0:
+                    PCs[c] = -1 * PCs[c]
+                    PC_carpet_R[:, i] = -1 * PC_carpet_R[:, i]
+
+        self.PCs = PCs
+        self.PC_carpet_R = PC_carpet_R
         return
