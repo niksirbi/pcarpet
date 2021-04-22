@@ -6,6 +6,7 @@ import nibabel as nib
 from scipy.stats import zscore
 import scipy.optimize as opt
 from scipy.special import erf
+from sklearn.decomposition import PCA
 
 __all__ = ["Model", "Fit", "opt_err_func", "transform_data", "cumgauss"]
 
@@ -157,35 +158,43 @@ def opt_err_func(params, x, y, func):
 class Dataset(object):
     """Class for generating carpet plot from fMRI data and fitting PCA to it"""
     def __init__(self, fmri_file, mask_file,
-                 TR=2.0, tSNR_thresh=15.0, ncomp=5):
+                 output_dir, TR=2.0):
         """ Initialize a Dataset object and import data.
 
         Parameters
         ----------
-        fmri_file : path
+        fmri_file : str
             Path to 4-D (3-D + time) functional MRI data in NIFTI format.
-        mask_file : path
+        mask_file : str
             Path to 3-D cmask in NIFTI format (e.g. cortical mask).
             Must have same coordinate space and data matrix as :fmri:
+        output_dir : str
+            Path to folder where results will be saved.
+            If it doesn't exist, it's created.
         TR : float
-            Repetition time (in seconds)
-            Default: :TR:2
-        tSNR_thresh: float
-            Voxels with tSNR values below this threshold will not be used.
-            To deactivate set to `None`
-            Default: :tSNR_thresh:15.0
-        ncomp : int
-            Number of PCA components to retain.
-            These are displayed in the plot and used for computing correlations
-            Default: :ncomp:5
+            fMRI repetition time in seconds
+            Default: 2.0
         """
         # Read parameters
         self.fmri_file = fmri_file
         self.mask_file = mask_file
         self.TR = TR
-        self.tSNR_thresh = tSNR_thresh
-        self.ncomp = ncomp
+        # Create output directory if it doesn't exist
+        if not os.path.isdir(output_dir):
+            try:
+                os.mkdir(output_dir)
+            except IOError:
+                print("Could not create 'output_dir'")
+        self.output_dir = output_dir
+
+        print("\nInitialized Dataset object")
+        print(f"\tfMRI file: {fmri_file}")
+        print(f"\tMask file: {mask_file}")
+        print(f"\tOutput directory: {output_dir}")
+        print("\tTR: {0:.2f} seconds".format(TR))
+
         # Call initializing functions
+        print(f"Reading data...")
         self.data, self.mask = self.import_data()
 
     def import_data(self):
@@ -239,7 +248,29 @@ class Dataset(object):
 
         return data, mask
 
-    def get_carpet(self, reorder=True):
+    def get_carpet(self, tSNR_thresh=15.0, reorder=True, save=True):
+        """ Makes a carpet plot from fMRI data
+
+        Parameters
+        ----------
+        tSNR_thresh: float
+            Voxels with tSNR values below this threshold will not be used.
+            To deactivate set to `None`
+            Default: 15.0
+        reorder: boolean
+            Whether to reorder carpet voxels according to their (decreasing)
+            correlation with the global (mean across voxesl) signal
+            Default: True
+        save: boolean
+            Whether to save the carpet matrix in the output directory.
+            Default: True
+
+        Returns
+        -------
+        carpet : array
+            A 2-D array (voxels x time).
+            Contains normalized fMRI data from within a mask.
+        """
 
         # compute fMRI data mean, std, and tSNR across time
         data_mean = self.data.mean(axis=-1, keepdims=True)
@@ -251,8 +282,8 @@ class Dataset(object):
         mask = self.mask < 0.5
         mask_4d = np.repeat(mask[:, :, :, np.newaxis], self.t, axis=3)
         tsnr_mask_4d = np.zeros(mask_4d.shape, dtype=bool)
-        if self.tSNR_thresh is not None:
-            tsnr_mask = data_tsnr.squeeze() < self.tSNR_thresh
+        if tSNR_thresh is not None:
+            tsnr_mask = data_tsnr.squeeze() < tSNR_thresh
             tsnr_mask_4d = np.repeat(tsnr_mask[:, :, :, np.newaxis],
                                      self.t, axis=3)
         data_masked = np.ma.masked_where(mask_4d | tsnr_mask_4d, self.data)
@@ -260,12 +291,14 @@ class Dataset(object):
         # Reshape data in 2-d (voxels x time)
         data_2d = data_masked.reshape((-1, self.t))
         print(f"fMRI data reshaped to voxels x time {data_2d.shape}")
+
         # Get indices for non-masked rows (voxels)
         indices_valid = np.where(np.any(~np.ma.getmask(data_2d), axis=1))[0]
         print(f"{len(indices_valid)} voxels retained after masking")
         # Keep only valid rows in carpet matrix
         carpet = data_2d[indices_valid, :]
         print(f"Carpet matrix created with shape {carpet.shape}")
+
         # Normalize carpet (z-score)
         carpet = zscore(carpet, axis=1)
         print(f"Carpet matrix normalized to zero-mean unit-variance")
@@ -276,9 +309,61 @@ class Dataset(object):
             gs_corr = pearsonr_2d(carpet, gs.reshape((1, self.t))).flatten()
             sort_index = [int(i) for i in np.flip(np.argsort(gs_corr))]
             carpet = carpet[sort_index, :]
-            print(f"Carpet matrix reordered")
+            print('Carpet reordered')
 
-        return(carpet)
+        # Save carpet to npy file
+        if save:
+            np.save(os.path.join(self.output_dir, 'carpet_reordered.npy'),
+                    carpet.data)
+            print("Carpet matrix saved as 'carpet.npy'")
+
+        self.carpet = carpet
+        return
+
+    def fit_pca_and_correlate(self, ncomp=5, save_pca_scores=False):
+        """ Fits PCA to carpet and correlates the first
+        :ncomp: components with all voxel time-series.
+        Saves PCs and explained variance ratio
+
+        Parameters
+        ----------
+        carpet : array
+            2-D carpet matrix (voxels x time)
+        ncomp : int
+            Number of PCA components to retain.
+            These are correlated with all carpet voxels
+            Default: 5
+        save_pca_scores: boolean
+            Whether to save the PCA scores (transformed carpet)
+            in the output directory.
+            Default: False
+        """
+
+        # Fit PCA
+        model = PCA(whiten=True)
+        pca_scores = model.fit_transform(self.carpet)
+        pca_comps = model.components_
+        self.expl_var = model.explained_variance_ratio_
+
+        # Save results to npy files
+        np.save(os.path.join(self.output_dir, 'pca_components_all.npy'),
+                pca_comps)
+        np.save(os.path.join(self.output_dir,
+                'pca_explained_variance_all.npy'), self.expl_var)
+        if save_pca_scores:
+            np.save(os.path.join(self.output_dir, 'pca_scores_all.npy'),
+                    pca_scores)
+        # Pass first ncomp PCs to pandas dataframe and save as csv
+        comp_names = ['PC' + str(i + 1) for i in range(ncomp)]
+        PCs = pd.DataFrame(data=model.components_.T[:, :ncomp],
+                           columns=comp_names)
+        PCs.to_csv(os.path.join(self.output_dir,
+                   f'pca_components_{ncomp}.csv'), index=False)
+        self.PCs = PCs
+
+        # Correlate first ncomp PCs with carpet matrix
+
+        return
 
 
 class Model(object):
