@@ -3,10 +3,17 @@ import os
 import numpy as np
 import pandas as pd
 import nibabel as nib
-from scipy.stats import zscore
+from scipy.stats import zscore, gaussian_kde
 from sklearn.decomposition import PCA
+from matplotlib import pyplot as plt
+from matplotlib.cm import ScalarMappable
+from matplotlib.colors import Normalize
 
-__all__ = ["pearsonr_2d", "Dataset"]
+plt.rcParams['pdf.fonttype'] = 42
+plt.rcParams['ps.fonttype'] = 42
+plt.rcParams['svg.fonttype'] = 'none'
+
+__all__ = ["pearsonr_2d", "get_axis_coords", "Dataset"]
 
 # Small value added to some denominators to avoid zero division
 EPSILON = 1e-9
@@ -39,6 +46,39 @@ def pearsonr_2d(A, B):
     numerator = np.dot(A_mA, B_mB.T)
     denominator = np.sqrt(np.dot(ssA[:, None], ssB[None])) + EPSILON
     return numerator / denominator
+
+
+def get_axis_coords(fig, ax):
+    """Get various coordinates of a an axis
+    within the figure space.
+
+    Parameters
+    ----------
+    fig : matplotlib figure object
+    ax : matplotlib axis object
+
+    Returns
+    -------
+    coords : dictionary
+        Contains the various coordinates.
+    """
+    box = ax.bbox
+    xmin, xmax = box.xmin, box.xmax
+    ymin, ymax = box.ymin, box.ymax
+    size_x, size_y = fig.get_size_inches() * fig.dpi
+    x0 = xmin / size_x
+    x1 = xmax / size_x
+    y0 = ymin / size_y
+    y1 = ymax / size_y
+    width = x1 - x0
+    height = y1 - y0
+    xc = x0 + width / 2
+    yc = y0 + height / 2
+    coords = {'xmin': x0, 'xmax': x1,
+              'ymin': y0, 'ymax': y1,
+              'W': width, 'H': height,
+              'xcen': xc, 'ycen': yc}
+    return coords
 
 
 class Dataset(object):
@@ -320,7 +360,7 @@ class Dataset(object):
                       index=False)
 
         self.fPCs = fPCs
-        self.PC_carpet_R = fPC_carpet_R
+        self.fPC_carpet_R = fPC_carpet_R
         return
 
     def correlate_with_fmri(self):
@@ -348,3 +388,138 @@ class Dataset(object):
         nib.save(output_nifti, output_file)
         print(f"First {self.ncomp} PCs correlated with fMRI data.")
         return
+
+    def plot_report(self):
+        """ Plots a report of the results, including the carpet plot,
+        the first :ncomp: PCs (fPCs), their correlation with the carpet,
+        and their explained variance ratios. The plot image is saved
+        in '.png', '.svg', and '.pdf' formats.
+        """
+
+        fig = plt.figure(figsize=(12, 10))
+        fig.subplots_adjust(left=0.05, right=0.95, hspace=0.1,
+                            bottom=0.05, top=0.92, wspace=0.5)
+        npc = self.ncomp
+
+        # Carpet plot
+        ax1 = plt.subplot2grid((6 + npc, 5), (0, 0),
+                               rowspan=5, colspan=3)
+        carpet_plot = ax1.imshow(self.carpet, aspect='auto',
+                                 cmap='Greys_r', vmin=-2, vmax=2)
+        ax1.set_xlabel(f'Time ({self.carpet.shape[1]} TRs)')
+        ax1.set_ylabel(f'Space ({self.carpet.shape[0]} voxels)')
+        ax1.set_xticks([])
+        ax1.set_yticks([])
+        ax1.set_title('Carpet plot: normalized BOLD (z-score)')
+        # Plot carpet colorbar in a separate axis
+        ax1_coords = get_axis_coords(fig, ax1)
+        cb_ax1 = plt.axes([ax1_coords['xcen'] - 0.05,
+                           ax1_coords['ymax'] + 0.06, 0.1, 0.01])
+        plt.colorbar(carpet_plot, cax=cb_ax1, ticks=[-2, 0, 2],
+                     orientation='horizontal')
+
+        # Plot fPCs
+        ymin = np.min(self.fPCs.values)
+        ymax = np.max(self.fPCs.values)
+        for i in range(npc):
+            axpc = plt.subplot2grid((6 + npc, 5), (6 + i, 0), colspan=3)
+            pc = self.fPCs[self.fPCs.columns[i]]
+            axpc.plot(pc, color='0.2', lw=1.5)
+            axpc.set_ylim(ymin, ymax)
+            axpc.set_xlim(0, self.t)
+            axpc.axis('off')
+            axpc_coords = get_axis_coords(fig, axpc)
+            fig.text(axpc_coords['xmin'] - 0.015, axpc_coords['ycen'],
+                     self.fPCs.columns[i], ha='right', va='center')
+            if i == 0:
+                axpc.set_title('Principal Components (PCs)')
+        # Plot time scalebar
+        tax = plt.subplot2grid((6 + npc, 5), (5, 0), rowspan=1, colspan=3)
+        tleft = self.t - 120 / self.TR
+        tright = self.t - 60 / self.TR
+        tcenter = self.t - 90 / self.TR
+        tax.plot([tleft, tright], [0.8, 0.8], lw=1.5, color='k')
+        tax.plot([tleft, tleft], [0.72, 0.88], lw=1.5, color='k')
+        tax.plot([tright, tright], [0.72, 0.88], lw=1.5, color='k')
+        tax.text(tcenter, 0.6, '1 minute', ha='center', va='top', color='k')
+        tax.set_xlim(0, self.t),
+        tax.set_ylim(0, 1)
+        tax.axis('off')
+        tax.patch.set_alpha(0.0)
+
+        # Plot fPC-carpet correlations as matrix
+        ax3 = plt.subplot2grid((6 + npc, 5), (0, 3), rowspan=5, colspan=1)
+        R_matrix = ax3.imshow(self.fPC_carpet_R, aspect='auto',
+                              cmap='coolwarm', vmin=-1, vmax=1)
+        ax3.set_xticks(np.arange(npc))
+        ax3.set_xticklabels(np.arange(1, npc + 1))
+        ax3.set_yticks([])
+        ax3.set_xlabel('PCs')
+        ax3.set_ylabel(f'Space ({self.carpet.shape[0]} voxels)')
+        ax3.tick_params(axis='both', length=0)
+        ax3.set_title('Correlation (r)')
+        # Plot correlation colorbar in a separate axis
+        ax3_coords = get_axis_coords(fig, ax3)
+        cb_ax3 = plt.axes([ax3_coords['xcen'] - 0.05,
+                           ax3_coords['ymax'] + 0.06, 0.1, 0.01])
+        plt.colorbar(R_matrix, cax=cb_ax3, ticks=[-1, 0, 1],
+                     orientation='horizontal')
+
+        # Plot PC-carpet correlation (r) histograms
+        for i in range(npc):
+            axh = plt.subplot2grid((6 + npc, 5), (6 + i, 3),
+                                   rowspan=1, colspan=1)
+            if i == 0:
+                axh.set_title('Histograms')
+            n, bins, patches = axh.hist(self.fPC_carpet_R[:, i], bins=50,
+                                        density=True, edgecolor=None,
+                                        range=(-1, 1), lw=0)
+            bin_centers = 0.5 * (bins[:-1] + bins[1:])
+            norm = Normalize(vmin=-1, vmax=1)
+            pcolors = [ScalarMappable(norm=norm, cmap='coolwarm').to_rgba(b)
+                       for b in bin_centers]
+            for p, c in zip(patches, pcolors):
+                plt.setp(p, 'facecolor', c)
+            kde = gaussian_kde(self.fPC_carpet_R[:, i])
+            kde_samples = np.linspace(-1, 1, 100)
+            axh.plot(kde_samples, kde(kde_samples), lw=1.5, color='0.2')
+            axh.set_xlim(-1, 1)
+            axh.set_yticks([])
+            axh.set_xticks([-1, 0, 1])
+            axh.set_xlabel('Correlation (r)')
+            if i == npc - 1:
+                axh.set_xticklabels([-1, 0, 1])
+            else:
+                axh.set_xticklabels([])
+            axh.spines['right'].set_visible(False)
+            axh.spines['left'].set_visible(False)
+            axh.spines['top'].set_visible(False)
+
+        # Plot variance explained
+        axv = plt.subplot2grid((6 + npc, 5), (0, 4), rowspan=5, colspan=1)
+        axv.bar(np.arange(npc), 100 * self.expl_var[:npc],
+                color='0.7', edgecolor='0.2', linewidth=1)
+        axv.set_xticks(np.arange(npc))
+        axv.set_xticklabels(np.arange(1, npc + 1))
+        axv.set_xlabel('PCs')
+        axv.set_title('Expl. variance (%)')
+
+        # Plot median correlation
+        medians = np.median(self.fPC_carpet_R, axis=0)
+        axm = plt.subplot2grid((6 + npc, 5), (6, 4), rowspan=npc, colspan=1)
+        bar_colors = [ScalarMappable(norm=norm, cmap='coolwarm').to_rgba(m)
+                      for m in medians]
+        axm.bar(np.arange(npc), medians, color=bar_colors,
+                edgecolor='0.2', linewidth=1)
+        axm.set_xticks(np.arange(npc))
+        axm.set_xticklabels(np.arange(1, npc + 1))
+        axm.set_xlabel('PCs')
+        axm.set_title('Median correlation (r)')
+
+        plotname = f'First{self.ncomp}_PCs_carpet_corr_report'
+        plt.savefig(os.path.join(self.output_dir,
+                                 f'{plotname}.png'), dpi=128)
+        plt.savefig(os.path.join(self.output_dir,
+                                 f'{plotname}.svg'))
+        plt.savefig(os.path.join(self.output_dir,
+                                 f'{plotname}.pdf'))
