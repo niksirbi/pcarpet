@@ -83,8 +83,7 @@ def get_axis_coords(fig, ax):
 
 class Dataset(object):
     """Class for generating carpet plot from fMRI data and fitting PCA to it"""
-    def __init__(self, fmri_file, mask_file,
-                 output_dir, TR='auto'):
+    def __init__(self, fmri_file, mask_file, output_dir):
         """ Initialize a Dataset object and import data.
 
         Parameters
@@ -118,30 +117,12 @@ class Dataset(object):
         print(f"\tfMRI file: {fmri_file}")
         print(f"\tMask file: {mask_file}")
         print(f"\tOutput directory: {output_dir}")
-        if type(TR) in [int, float]:
-            self.TR = float(TR)
-            print(f"\tTR set to {self.TR:.3f} seconds")
-        elif TR == 'auto':
-            self.TR = TR
-            pass
-        else:
-            raise ValueError("TR must be a float or 'auto'")
-
-        # Call initializing functions
-        print(f"Reading data...")
-        self.data, self.mask = self.import_data()
 
     def import_data(self):
-        """ Load fMRI and cortex_mask data using nibabel.
-
-        Returns
-        -------
-        data : array
-            A 4d array containing fMRI data
-        mask :
-            A 3d array containing mask data
+        """ Load fMRI and mask data using nibabel.
         """
 
+        print(f"Reading data...")
         # Check if input files exist and try importing them with nibabel
         if os.path.isfile(self.fmri_file):
             try:
@@ -177,28 +158,29 @@ class Dataset(object):
         self.x, self.y, self.z, self.t = data.shape
         self.header = fmri_nifti.header
         self.affine = fmri_nifti.affine
-        # read TR from the fMRI header (if 'auto')
-        if self.TR == 'auto':
-            self.TR = float(self.header['pixdim'][4])
-            print(f"\tTR of {self.TR:.3f} seconds read from fMRI header")
-        return data, mask
 
-    def get_carpet(self, tSNR_thresh=15.0, reorder=True, save=False):
+        # store data and mask variables as object attributes
+        self.data = data
+        self.mask = mask
+        return
+
+    def get_carpet(self, tSNR_thresh=15.0,
+                   reorder_carpet=True, save_carpet=False):
         """ Makes a carpet matrix from fMRI data.
         A carpet is a 2d matrix shaped voxels x time which contains
         the normalized (z-score) BOLD-fMRI signal from within a mask
 
         Parameters
         ----------
-        tSNR_thresh : float
+        tSNR_thresh : float or None
             Voxels with tSNR values below this threshold will be excluded.
-            To deactivate set to `None`
+            To deactivate set to None.
             Default: 15.0
-        reorder : boolean
+        reorder_carpet : boolean
             Whether to reorder carpet voxels according to their (decreasing)
             correlation with the global (mean across voxels) signal
             Default: True
-        save : boolean
+        save_carpet : boolean
             Whether to save the carpet matrix in the output directory.
             The file might be large (possibly > 100MB depending on
             fMRI data and mask size).
@@ -237,7 +219,7 @@ class Dataset(object):
         print(f"Carpet normalized to zero-mean unit-variance.")
 
         # Re-order carpet plot based on correlation with the global signal
-        if reorder:
+        if reorder_carpet:
             gs = np.mean(carpet, axis=0)
             gs_corr = pearsonr_2d(carpet, gs.reshape((1, self.t))).flatten()
             sort_index = [int(i) for i in np.flip(np.argsort(gs_corr))]
@@ -245,7 +227,7 @@ class Dataset(object):
             print('Carpet reordered.')
 
         # Save carpet to npy file
-        if save:
+        if save_carpet:
             np.save(os.path.join(self.output_dir, 'carpet.npy'), carpet)
             print("Carpet saved as 'carpet.npy'.")
 
@@ -389,12 +371,29 @@ class Dataset(object):
         print(f"First {self.ncomp} PCs correlated with fMRI data.")
         return
 
-    def plot_report(self):
+    def plot_report(self, TR='auto'):
         """ Plots a report of the results, including the carpet plot,
         the first :ncomp: PCs (fPCs), their correlation with the carpet,
         and their explained variance ratios. The plot image is saved
-        in '.png', '.svg', and '.pdf' formats.
+        in '.png' (raster) and '.svg' (vector) formats.
+
+        Parameters
+        ----------
+        TR : 'auto' or float
+            fMRI repetition time in seconds. If 'auto', the program
+            attempts to read TR from the fMRI header. This can be
+            bypassed by explicitly passing TR as a float.
+            Default: 'auto'
         """
+
+        if type(TR) in [int, float]:
+            self.TR = float(TR)
+            print(f"TR set to {self.TR:.3f} seconds")
+        elif TR == 'auto':
+            self.TR = float(self.header['pixdim'][4])
+            print(f"TR of {self.TR:.3f} seconds read from fMRI header")
+        else:
+            raise ValueError("TR must be a float or 'auto'")
 
         fig = plt.figure(figsize=(12, 10))
         fig.subplots_adjust(left=0.05, right=0.95, hspace=0.1,
@@ -521,5 +520,74 @@ class Dataset(object):
                                  f'{plotname}.png'), dpi=128)
         plt.savefig(os.path.join(self.output_dir,
                                  f'{plotname}.svg'))
-        plt.savefig(os.path.join(self.output_dir,
-                                 f'{plotname}.pdf'))
+        plt.close(fig)
+        print(f"Visual report generated and saved as {plotname}.")
+
+    def run_pcarpet(self, **kwargs):
+        """ Runs the entire pcarpet pipeline using the default options
+        for each function. The defaults can be orverriden by passing
+        the following optional keywords arguments:
+
+        Parameters
+        ----------
+        tSNR_thresh : float or None
+            Voxels with tSNR values below this threshold will be excluded
+            from the carpet. To deactivate set to None.
+            Default: 15.0
+        reorder_carpet : boolean
+            Whether to reorder carpet voxels according to their (decreasing)
+            correlation with the global (mean across voxels) signal
+            Default: True
+        save_carpet : boolean
+            Whether to save the carpet matrix in the output directory.
+            The file might be large (possibly > 100MB depending on
+            fMRI data and mask size).
+            Default: False
+        save_pca_scores : boolean
+            Whether to save the PCA scores (transformed carpet)
+            in the output directory. The file might be large
+            (possibly > 100MB depending on fMRI data and mask size).
+            Default: False
+        ncomp : int
+            Number of PCA components to retain. These first PCs (fPCs)
+            are correlated with all carpet voxels and subsequently
+            also with the entire fMRI dataset.
+            Default: 5
+        flip_sign : boolean
+            If True, an fPC (and its correlation values) will be sign-flipped
+            when the median of its original correlation with carpet voxels is
+            negative. This enforces the sign of the fPC to match the sign of
+            the BOLD signal activity for most voxels. The sign-flipped
+            fPCs are only used for downstream analysis and visualization
+            (the saved PCA components and scores retain the original sign).
+            Default: True
+        TR : 'auto' or float
+            fMRI repetition time in seconds. If 'auto', the program
+            attempts to read the TR from the fMRI header. This can be
+            bypassed by explicitly passing TR as a float.
+            Default: 'auto'
+        """
+
+        # Define default options in a dictionary
+        options = {'tSNR_thresh': 15.0, 'reorder_carpet': True,
+                   'save_carpet': False, 'save_pca_scores': False,
+                   'ncomp': 5, 'flip_sign': True, 'TR': 'auto'}
+
+        # Override default if any of the options is given
+        # explicitly as a keyword argument
+        for key, value in kwargs.items():
+            if key in options.keys():
+                options[key] = value
+            else:
+                print(f"'{key}' is not a valid argument!")
+        self.used_options = options
+
+        self.import_data()
+        self.get_carpet(tSNR_thresh=options['tSNR_thresh'],
+                        reorder_carpet=options['reorder_carpet'],
+                        save_carpet=options['save_carpet'])
+        self.fit_pca2carpet(save_pca_scores=options['save_pca_scores'])
+        self.correlate_with_carpet(ncomp=options['ncomp'],
+                                   flip_sign=options['flip_sign'])
+        self.correlate_with_fmri()
+        self.plot_report(TR=options['TR'])
