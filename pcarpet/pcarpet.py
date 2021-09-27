@@ -21,7 +21,7 @@ EPSILON = 1e-9
 
 
 def pearsonr_2d(A, B):
-    """Calculate row-wise Pearson's correlation between 2 2d-arrays
+    """Calculates row-wise Pearson's correlation between 2 2d-arrays
 
     Parameters
     ----------
@@ -29,6 +29,7 @@ def pearsonr_2d(A, B):
         shape N x T
     B : 2d-array
         shape M x T
+
     Returns
     -------
     R : 2d-array
@@ -56,7 +57,7 @@ def pearsonr_2d(A, B):
 
 
 def get_axis_coords(fig, ax):
-    """Get various coordinates of an axis
+    """Gets various coordinates of an axis
     within the figure space.
 
     Parameters
@@ -68,9 +69,8 @@ def get_axis_coords(fig, ax):
     -------
     coords : dictionary
         Contains the various coordinates:
-            xmin, xmax, ymin, ymax: ax borders
-            W, H: width and height of ax
-            xcen, ycen: ax center coordinates
+        xmin, xmax, ymin, ymax, W (width), H (height),
+        xcen (x center), ycen (ycenter)
     """
     try:
         size_x, size_y = fig.get_size_inches() * fig.dpi
@@ -132,7 +132,7 @@ class Dataset(object):
         print(f"\tOutput directory: {output_dir}")
 
     def import_data(self):
-        """ Load fMRI and mask data using nibabel.
+        """ Loads fMRI and mask data using nibabel.
         """
 
         print(f"Reading data...")
