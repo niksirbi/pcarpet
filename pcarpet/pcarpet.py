@@ -66,12 +66,23 @@ def get_axis_coords(fig, ax):
     Returns
     -------
     coords : dictionary
-        Contains the various coordinates.
+        Contains the various coordinates:
+            xmin, xmax, ymin, ymax: ax borders
+            W, H: width and height of ax
+            xcen, ycen: ax center coordinates
     """
-    box = ax.bbox
+    try:
+        size_x, size_y = fig.get_size_inches() * fig.dpi
+    except ValueError:
+        print('fig must be a matplotlib figure object')
+
+    try:
+        box = ax.bbox
+    except ValueError:
+        print('ax must be a matplotlib axis object')
+
     xmin, xmax = box.xmin, box.xmax
     ymin, ymax = box.ymin, box.ymax
-    size_x, size_y = fig.get_size_inches() * fig.dpi
     x0 = xmin / size_x
     x1 = xmax / size_x
     y0 = ymin / size_y
