@@ -34,6 +34,12 @@ def pearsonr_2d(A, B):
         N x M shaped correlation matrix between all row combinations of A and B
     """
 
+    # Check if the 2 input arrays are 2-d and have the same column number T
+    if (A.ndim != 2) or (B.ndim) != 2:
+        raise ValueError('A and B must be 2-d numpy arrays.')
+    if A.shape[1] != B.shape[1]:
+        raise ValueError('A and B arrays must have the same shape.')
+
     #  Subtract row-wise mean from input arrays
     A_mA = A - A.mean(1)[:, None]
     B_mB = B - B.mean(1)[:, None]
@@ -49,7 +55,7 @@ def pearsonr_2d(A, B):
 
 
 def get_axis_coords(fig, ax):
-    """Get various coordinates of a an axis
+    """Get various coordinates of an axis
     within the figure space.
 
     Parameters
