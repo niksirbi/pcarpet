@@ -9,6 +9,7 @@ from matplotlib import pyplot as plt
 from matplotlib.cm import ScalarMappable
 from matplotlib.colors import Normalize
 
+# Matoplotlib parameters for saving vector figures properly
 plt.rcParams['pdf.fonttype'] = 42
 plt.rcParams['ps.fonttype'] = 42
 plt.rcParams['svg.fonttype'] = 'none'
@@ -34,9 +35,9 @@ def pearsonr_2d(A, B):
         N x M shaped correlation matrix between all row combinations of A and B
     """
 
-    # Check if the 2 input arrays are 2-d and have the same column number T
+    # Check if the 2 input arrays are 2d and have the same column number T
     if (A.ndim != 2) or (B.ndim) != 2:
-        raise ValueError('A and B must be 2-d numpy arrays.')
+        raise ValueError('A and B must be 2d numpy arrays.')
     if A.shape[1] != B.shape[1]:
         raise ValueError('A and B arrays must have the same shape.')
 
@@ -108,7 +109,7 @@ class Dataset(object):
         fmri_file : str
             Path to 4d (3d + time) functional MRI data in NIFTI format.
         mask_file : str
-            Path to 3d cmask in NIFTI format (e.g. cortical mask).
+            Path to 3d mask in NIFTI format (e.g. cortical mask).
             Must have same coordinate space and data matrix as :fmri:
         output_dir : str
             Path to folder where results will be saved.
@@ -289,14 +290,12 @@ class Dataset(object):
             are correlated with all carpet voxels.
             Default: 5
         flip_sign : boolean
-            If True, a PC (and its correlation with carpet voxels)
-            will be sign-flipped when the median of its original
-            correlation with carpet voxels is negative.
-            This enforces the sign of the PC to match the sign of
-            the BOLD signal activity for most voxels. This applies
-            only fPCs.The sign-flipped PCs are only used for downstream
-            analysis and visualization (the saved PCA components, scores,
-            and report have the original sign).
+            If True, an fPC (and its correlation values) will be sign-flipped
+            when the median of its original correlation with carpet voxels is
+            negative. This enforces the sign of the fPC to match the sign of
+            the BOLD signal activity for most voxels. The sign-flipped
+            fPCs are only used for downstream analysis and visualization
+            (the saved PCA components and scores retain the original sign).
             Default: True
         """
 
@@ -315,10 +314,10 @@ class Dataset(object):
 
         # Correlate fPCs with carpet matrix
         fPC_carpet_R = pearsonr_2d(self.carpet, fPCs.values.T)
+        # Save correlation matrix (voxels x ncom) as npy
         np.save(os.path.join(self.output_dir,
                              f'First{self.ncomp}_PCs_carpet_corr.npy'),
                 fPC_carpet_R)
-        # Save correlation matrix (voxels x ncom) as npy
         print(f"First {ncomp} PCs correlated with carpet.")
 
         # Construct table reporting various metrics for each fPC
@@ -527,6 +526,7 @@ class Dataset(object):
         axm.set_xlabel('PCs')
         axm.set_title('Median correlation (r)')
 
+        # Save figure
         plotname = f'First{self.ncomp}_PCs_carpet_corr_report'
         plt.savefig(os.path.join(self.output_dir,
                                  f'{plotname}.png'), dpi=128)
@@ -537,7 +537,7 @@ class Dataset(object):
 
     def run_pcarpet(self, **kwargs):
         """ Runs the entire pcarpet pipeline using the default options
-        for each function. The defaults can be orverriden by passing
+        for each function. The defaults can be overriden by passing
         the following optional keywords arguments:
 
         Parameters
