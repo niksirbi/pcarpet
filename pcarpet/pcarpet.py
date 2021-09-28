@@ -268,19 +268,19 @@ class Dataset(object):
         self.expl_var = model.explained_variance_ratio_
 
         # Save results to npy files
-        np.save(os.path.join(self.output_dir, 'PCs_all.npy'),
+        np.save(os.path.join(self.output_dir, 'PCs.npy'),
                 self.pca_comps)
         np.save(os.path.join(self.output_dir,
-                             'PCs_all_expl_variance_ratio.npy'),
+                             'PCA_expl_var.npy'),
                 self.expl_var)
         if save_pca_scores:
-            np.save(os.path.join(self.output_dir, 'PCA_scores_all.npy'),
+            np.save(os.path.join(self.output_dir, 'PCA_scores.npy'),
                     pca_scores)
         print("PCA fit to carpet and results saved.")
         return
 
     def correlate_with_carpet(self, ncomp=5, flip_sign=True):
-        """ Correlates the first :ncomp: principal components (PCs)
+        """ Correlates the first ncomp principal components (PCs)
         with all carpet voxel time-series. Saves the correlation matrix.
 
         Parameters
@@ -309,14 +309,12 @@ class Dataset(object):
         comp_names = ['PC' + str(i + 1) for i in range(self.ncomp)]
         fPCs = pd.DataFrame(data=self.pca_comps.T[:, :self.ncomp],
                             columns=comp_names)
-        fPCs.to_csv(os.path.join(self.output_dir,
-                                 f'First{self.ncomp}_PCs.csv'), index=False)
+        fPCs.to_csv(os.path.join(self.output_dir, 'fPCs.csv'), index=False)
 
         # Correlate fPCs with carpet matrix
         fPC_carpet_R = pearsonr_2d(self.carpet, fPCs.values.T)
         # Save correlation matrix (voxels x ncom) as npy
-        np.save(os.path.join(self.output_dir,
-                             f'First{self.ncomp}_PCs_carpet_corr.npy'),
+        np.save(os.path.join(self.output_dir, 'fPCs_carpet_corr.npy'),
                 fPC_carpet_R)
         print(f"First {ncomp} PCs correlated with carpet.")
 
@@ -339,17 +337,16 @@ class Dataset(object):
                     N_flipped += 1
         # If any flips occured, save flipped fPCs and their carpet correlation
         if N_flipped > 0:
-            fPCs.to_csv(os.path.join(self.output_dir,
-                                     f'First{self.ncomp}_PCs_flipped.csv'),
+            fPCs.to_csv(os.path.join(self.output_dir, 'fPCs_flipped.csv'),
                         index=False)
             np.save(os.path.join(self.output_dir,
-                    f'First{self.ncomp}_PCs_flipped_carpet_corr.npy'),
+                                 'fPCs_carpet_corr_flipped.npy'),
                     fPC_carpet_R)
             print(f"Out of these, {N_flipped} sign-flipped.")
 
         # Save report table
         report.to_csv(os.path.join(self.output_dir,
-                      f'First{self.ncomp}_PCs_carpet_corr_report.csv'),
+                                   'fPCs_carpet_corr_report.csv'),
                       index=False)
 
         self.fPCs = fPCs
@@ -358,7 +355,7 @@ class Dataset(object):
 
     def correlate_with_fmri(self):
         """ Correlates the retained (and possibly sign-flipped)
-        first :ncomp: PCs (fPCs) with the original 4d fMRI dataset
+        first ncomp PCs (fPCs) with the original 4d fMRI dataset
         and saves the resulting correlation maps as a 4d NIFTI file
         (3d space + ncomp).
         """
@@ -377,14 +374,14 @@ class Dataset(object):
         output_nifti = nib.Nifti1Image(fPC_fmri_R, self.affine,
                                        header=header)
         output_file = os.path.join(self.output_dir,
-                                   f'First{self.ncomp}_PCs_fMRI_corr.nii.gz')
+                                   'fPCs_fMRI_corr.nii.gz')
         nib.save(output_nifti, output_file)
         print(f"First {self.ncomp} PCs correlated with fMRI data.")
         return
 
     def plot_report(self, TR='auto'):
         """ Plots a report of the results, including the carpet plot,
-        the first :ncomp: PCs (fPCs), their correlation with the carpet,
+        the first ncomp PCs (fPCs), their correlation with the carpet,
         and their explained variance ratios. The plot image is saved
         in '.png' (raster) and '.svg' (vector) formats.
 
@@ -527,12 +524,11 @@ class Dataset(object):
         axm.set_title('Median correlation (r)')
 
         # Save figure
-        plotname = f'First{self.ncomp}_PCs_carpet_corr_report'
+        plotname = f'fPCs_carpet_corr_report'
         plt.savefig(os.path.join(self.output_dir,
                                  f'{plotname}.png'), dpi=128)
         plt.savefig(os.path.join(self.output_dir,
                                  f'{plotname}.svg'))
-        plt.close(fig)
         print(f"Visual report generated and saved as {plotname}.")
 
     def run_pcarpet(self, **kwargs):
