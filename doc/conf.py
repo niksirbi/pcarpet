@@ -55,7 +55,11 @@ extensions = ['sphinx.ext.autodoc',
               'math_dollar',  # has to go before numpydoc
               'numpydoc',
               'github',
-              'sphinx_gallery.gen_gallery']
+              'nbsphinx']
+#              'sphinx_gallery.gen_gallery']
+
+# Removes some API documentation warnings
+numpydoc_show_class_members = False
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -70,16 +74,16 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # --- Sphinx Gallery ---
-sphinx_gallery_conf = {
-    # path to your examples scripts
-    'examples_dirs': '../examples',
-    # path where to save gallery generated examples
-    'gallery_dirs': 'auto_examples',
-    # To auto-generate example sections in the API
-    'doc_module': ('pcarpet',),
-    # Auto-generated mini-galleries go here
-    'backreferences_dir': 'gen_api'
-}
+#sphinx_gallery_conf = {
+#    # path to your examples scripts
+#    'examples_dirs': '../examples',
+#    # path where to save gallery generated examples
+#    'gallery_dirs': 'auto_examples',
+#    # To auto-generate example sections in the API
+#    'doc_module': ('pcarpet',),
+#    # Auto-generated mini-galleries go here
+#    'backreferences_dir': 'gen_api'
+#}
 
 # Automatically generate stub pages for API
 autosummary_generate = True
@@ -137,7 +141,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'alabaster'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -300,3 +304,8 @@ texinfo_domain_indices = False
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'http://docs.python.org/': None}
+
+
+# include custom CSS
+def setup(app):
+    app.add_css_file('rtd_theme_custom.css')
