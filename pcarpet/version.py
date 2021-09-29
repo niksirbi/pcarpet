@@ -22,7 +22,7 @@ CLASSIFIERS = ["Development Status :: 3 - Alpha",
                "Intended Audience :: Science/Research",
                "License :: OSI Approved :: MIT License",
                "Operating System :: OS Independent",
-               "Programming Language :: Python",
+               "Programming Language :: Python :: 3",
                "Topic :: Scientific/Engineering"]
 
 # Description should be a one-liner:
@@ -32,7 +32,7 @@ long_description = """
 
 pcarpet
 ========
-pcarpet is a small python package that allows you to generate a carpet plot from fMRI data and then apply PCA to the plot matrix.
+'pcarpet' is a small python package that creates a carpet plot from fMRI data and decomposes it with PCA.
 
 License
 =======
@@ -42,7 +42,7 @@ for usage, and a DISCLAIMER OF ALL WARRANTIES.
 
 All trademarks referenced herein are property of their respective holders.
 
-Copyright (c) 2021--, Nikoloz Sirmpilatze, German Primate Center - Leibniz Institute for Primate Research.
+Copyright (c) 2021--, Nikoloz Sirmpilatze, German Primate Center.
 """
 
 NAME = "pcarpet"
@@ -61,5 +61,6 @@ MINOR = _version_minor
 MICRO = _version_micro
 VERSION = __version__
 PACKAGE_DATA = {'pcarpet': [pjoin('data', '*')]}
-REQUIRES = ["numpy"]
-PYTHON_REQUIRES = ">= 3.5"
+REQUIRES = ['numpy', 'scipy', 'matplotlib', 'pandas',
+            'scikit-learn', 'nibabel', 'ipython']
+PYTHON_REQUIRES = ">= 3.6"

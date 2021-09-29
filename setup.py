@@ -1,3 +1,4 @@
+from pcarpet.version import AUTHOR, AUTHOR_EMAIL, CLASSIFIERS, DESCRIPTION, DOWNLOAD_URL, LICENSE, LONG_DESCRIPTION, MAINTAINER, MAINTAINER_EMAIL, NAME, PLATFORMS, PYTHON_REQUIRES, REQUIRES, URL, VERSION
 import sys
 import os
 from setuptools import setup, find_packages
@@ -29,12 +30,10 @@ opts = dict(name=NAME,
             platforms=PLATFORMS,
             version=VERSION,
             packages=PACKAGES,
-            package_data=PACKAGE_DATA,
+            # package_data=PACKAGE_DATA,
             install_requires=REQUIRES,
             python_requires=PYTHON_REQUIRES,
-            setup_requires=SETUP_REQUIRES,
-            requires=REQUIRES)
-
+            setup_requires=SETUP_REQUIRES)
 
 if __name__ == '__main__':
     setup(**opts)
