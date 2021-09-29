@@ -1,4 +1,4 @@
-## pcarpet
+# pcarpet
 [![Build Status](https://travis-ci.org/niksirbi/pcarpet.svg?branch=master)](https://travis-ci.org/niksirbi/pcarpet)
 
 ![logo](images/logo.png)
@@ -7,7 +7,7 @@
 
 **Author:** 
 
-[Nikoloz Sirmpilatze](https://github.com/niksirbi) ([German Primate Center](https://www.dpz.eu/), Göttingen)
+[Nikoloz Sirmpilatze](https://github.com/niksirbi) ([German Primate Center](https://www.dpz.eu/))
 
 **Citation:** 
 
@@ -32,10 +32,6 @@ The pipeline consists of the following steps:
 6. A visual summary of results from steps 1-4 is plotted (example below).
 
 ![report](images/visual_report.png)
-
-<p align="center">
-  <img src="images/visual_report.png" width="800" />
-</p>
 
 The above image corresponds to an instance of burst-suppression in a female long-tailed macaque (*Macaca fascicularis*) anesthetized with isoflurane. The carpet plot (using a cortical mask) shows a wide-spread, slow, quasi-periodic signal fluctuation, which is well captured by PC1. PC1 is positively correlated with most cortical voxel timeseries, resulting in a heavily asymmetric distribution of correlation coefficients (*r*), while PCs 2-4 show symmetric *r* histograms centered on zero. This property can be quantified by taking the median of carpet-wide *r* values (bottom right). According to the terminology introduced in Sirmpilatze et al. 2021, PC1 is an 'asymmetric PC`. Under the right circumstances, the presence of an asymmetric PC in a cortical carpet plot can be an fMRI signature of burst-suppression, with the brain-wide distribution of the asymmetric PC representing a map of burst-suppression (see manuscript for details).
 
