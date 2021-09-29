@@ -2,6 +2,9 @@
 *~
 *.DS_Store
 _build/
+build/
+dist/
+pcarpet.egg*
 auto_examples/
 gen_api/
 .ipynb_checkpoints
