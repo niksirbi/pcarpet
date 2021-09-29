@@ -37,6 +37,34 @@ The above image corresponds to an instance of burst-suppression in a female long
 
 ## Installation
 
+### a. pip
+You can install the latest release from PyPI via
+
+```python
+pip install pcarpet
+```
+
+Pip will try to ensure that the following requirements are satisfied:
+
+1. Python 3.6 or higher
+2. [numpy](https://numpy.org/)
+3. [scipy](https://scipy.org/)
+4. [matplotlib](https://matplotlib.org/)
+5. [pandas](https://pandas.pydata.org/)
+6. [scikit-learn](https://scikit-learn.org/stable/)
+7. [nibabel](https://nipy.org/nibabel/)
+8. [ipython](https://ipython.org/)
+
+### b. Anaconda
+If you are having issues with resolving package dependencies, you can create a virtual environment using [Anaconda](https://www.anaconda.com/products/individual):
+
+1. Install an Anaconda distribution of python, choosing python 3.x and your operating system.
+2. Download the `environment.yml` file from this repository. You can clone the repository or copy-paste the file contents into a text document on your local computer.
+3. Open a terminal/anaconda prompt with conda for python 3 in the path.
+4. Navigate to the directory where the `environment.yml` is stored and run `conda env create -f environment.yml`
+5. Activate the environment with `conda activate pcarpet-env` (Note: you will always have to activate `pcarpet-env` before using `pcarpet`)
+
+
 ## Usage
 Running `pcarpet` only requires 3 arguments (paths):
 
