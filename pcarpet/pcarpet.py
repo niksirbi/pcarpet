@@ -330,7 +330,7 @@ class Dataset(object):
         N_flipped = 0
         if flip_sign:
             for i, c in enumerate(fPCs):
-                if report.loc[i, 'carpet_R_median'] < 0:
+                if report.loc[i, 'carpet_r_median'] < 0:
                     fPCs[c] = -1 * fPCs[c]
                     fPC_carpet_R[:, i] = -1 * fPC_carpet_R[:, i]
                     report.loc[i, 'sign_flipped'] = True
