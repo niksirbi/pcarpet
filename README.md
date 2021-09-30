@@ -3,15 +3,11 @@
 
 ![logo](images/logo.png)
 
-'pcarpet' is a small python package that creates a **carpet plot** from fMRI data and decomposes it with **PCA**.
+`pcarpet` is a small python package that creates a **carpet plot** from fMRI data and decomposes it with **PCA**.
 
-**Author:** 
+**Author:** [Nikoloz Sirmpilatze](https://github.com/niksirbi) ([German Primate Center](https://www.dpz.eu/))
 
-[Nikoloz Sirmpilatze](https://github.com/niksirbi) ([German Primate Center](https://www.dpz.eu/))
-
-**Citing pcarpet:** 
-
-If you use `pcarpet` in a scientific publication, please cite Sirmpilatze et al 2021 (preprint with doi coming soon)
+**Citing pcarpet:** If you use `pcarpet` in a scientific publication, please cite Sirmpilatze et al 2021 (preprint with doi coming soon)
 
 **Links:**
 
@@ -25,6 +21,7 @@ If you use `pcarpet` in a scientific publication, please cite Sirmpilatze et al 
 - [How it works](#how) 
 - [Installation](#install) 
 - [Usage](#use) 
+- [Acknowledgements](#thanks) 
 
 <a name="rationale"></a>
 ## Rationale
@@ -98,6 +95,7 @@ MyData.run_pcarpet()
 
 Detailed instructions on running `pcarpet` are available as a [jupyter notebook](doc/example_usage.ipynb). The notebook runs `pcarpet` on some example data, either in a single step (as above) or by separately calling the various parts of the pipeline. It also explains the various optional arguments and the outputs of the pipeline. If you wish to run the notebook locally, make sure that [jupyter](https://jupyter.org/) is installed in you programming environment.
 
+<a name="thanks"></a>
 ## Acknowledgements
 This project was created using the [shablona template](https://github.com/uwescience/shablona).
 

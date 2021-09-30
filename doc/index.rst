@@ -1,7 +1,7 @@
 Welcome to pcarpet's documentation!
 ====================================
 
-'pcarpet' is a small python package that creates a **carpet plot** from fMRI data and decomposes it with **PCA**.
+`pcarpet` is a small python package that creates a **carpet plot** from fMRI data and decomposes it with **PCA**.
 
 **Author:** `Nikoloz Sirmpilatze <https://github.com/niksirbi>`_ (`German Primate Center <https://www.dpz.eu/>`_)
 
