@@ -1,0 +1,14 @@
+{
+    "creators": [
+        {   
+            "orcid": "0000-0003-1778-2427",
+            "affiliation": "German Primate Center",
+            "name": "Sirmpilatze, Nikoloz"
+        }
+    ],    
+
+    "license": "MIT",
+
+    "keywords": ["fMRI", "PCA", "python", "carpet"]
+
+}
