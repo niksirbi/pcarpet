@@ -135,7 +135,7 @@ class Dataset(object):
         """ Loads fMRI and mask data using nibabel.
         """
 
-        print(f"Reading data...")
+        print("Reading data...")
         # Check if input files exist and try importing them with nibabel
         if os.path.isfile(self.fmri_file):
             try:
@@ -229,7 +229,7 @@ class Dataset(object):
 
         # Normalize carpet (z-score)
         carpet = zscore(carpet, axis=1)
-        print(f"Carpet normalized to zero-mean unit-variance.")
+        print("Carpet normalized to zero-mean unit-variance.")
 
         # Re-order carpet plot based on correlation with the global signal
         if reorder_carpet:
@@ -322,7 +322,7 @@ class Dataset(object):
         report = pd.DataFrame()
         report.loc[:, 'PC'] = comp_names
         report.loc[:, 'expl_var'] = self.expl_var[:ncomp]
-        report.loc[:, 'carpet_R_median'] = [np.median(fPC_carpet_R[:, i])
+        report.loc[:, 'carpet_r_median'] = [np.median(fPC_carpet_R[:, i])
                                             for i in range(self.ncomp)]
         report.loc[:, 'sign_flipped'] = [False] * self.ncomp
 
@@ -524,7 +524,7 @@ class Dataset(object):
         axm.set_title('Median correlation (r)')
 
         # Save figure
-        plotname = f'fPCs_carpet_corr_report'
+        plotname = 'fPCs_carpet_corr_report'
         plt.savefig(os.path.join(self.output_dir,
                                  f'{plotname}.png'), dpi=128)
         plt.savefig(os.path.join(self.output_dir,

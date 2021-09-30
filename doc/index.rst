@@ -14,7 +14,8 @@ For an overview of the project, please refer to the `README file
 Contents:
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
+   readme.ipynb
    example_usage.ipynb
    api

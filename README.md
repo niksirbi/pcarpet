@@ -9,9 +9,15 @@
 
 [Nikoloz Sirmpilatze](https://github.com/niksirbi) ([German Primate Center](https://www.dpz.eu/))
 
-**Citation:** 
+**Citing pcarpet:** 
 
-Sirmpilatze et al 2021 (preprint with doi coming soon)
+If you use `pcarpet` in a scientific publication, please cite Sirmpilatze et al 2021 (preprint with doi coming soon)
+
+**Links:**
+1. Reference paper
+2. Associated dataset
+3. Documentation
+4. Example jupyter notebook
 
 ## Rationale
 A 'carpet plot' is a 2d representation of fMRI data (voxels x time), very similar to 'The Plot' described by Jonathan D Power ([Power 2017](https://www.sciencedirect.com/science/article/abs/pii/S1053811916303871?via%3Dihub)). 
@@ -22,6 +28,7 @@ which often come from non-neural sources (e.g. head motion).
 That said, the carpet plot can also reveal 'real' neural activity, especially when the activity is slow and synchronous, as is the case for **anesthesia-induced burst-suppression** (Sirmpiltze et al. 2021).
 The `pcarpet` package implements the analytical pipeline used in the Sirmpiltze et al. 2021 paper to identify instances of burst-suppression in anesthetized humans, nonhuman primates, and rats.
 
+## How it works
 The pipeline consists of the following steps:
 
 1. First tha necessary data is imported, consisting of a preprocessed fMRI scan (4d NIFTI file) and a mask (3d NIFTI file) defining a single region-of-interest.
@@ -58,12 +65,11 @@ Pip will try to ensure that the following requirements are satisfied:
 ### b. Anaconda
 If you are having issues with resolving package dependencies, you can create a virtual environment using [Anaconda](https://www.anaconda.com/products/individual):
 
-1. Install an Anaconda distribution of python, choosing python 3.x and your operating system.
+1. Install an Anaconda distribution of python 3, choosing your operating system.
 2. Download the `environment.yml` file from this repository. You can clone the repository or copy-paste the file contents into a text document on your local computer.
 3. Open a terminal/anaconda prompt with conda for python 3 in the path.
 4. Navigate to the directory where the `environment.yml` is stored and run `conda env create -f environment.yml`
 5. Activate the environment with `conda activate pcarpet-env` (Note: you will always have to activate `pcarpet-env` before using `pcarpet`)
-
 
 ## Usage
 Running `pcarpet` only requires 3 arguments (paths):
@@ -79,7 +85,7 @@ MyData = pcarpet.Dataset(fmri_file, mask_file, output_folder)
 MyData.run_pcarpet()
 ```
 
-Detailed instructions on running `pcarpet` are available as a [jupyter notebook](doc/example_usage.ipynb). The notebook runs `pcarpet` on some example data, either in a single step (as above), or by separately calling the various parts of the pipeline. The notebook also explains additional optional arguments and the standard set of `pcarpet` outputs.
+Detailed instructions on running `pcarpet` are available as a [jupyter notebook](doc/example_usage.ipynb). The notebook runs `pcarpet` on some example data, either in a single step (as above) or by separately calling the various parts of the pipeline. It also explains the various optional arguments and the outputs of the pipeline. If you wish to run the notebook locally, make sure that [jupyter](https://jupyter.org/) is installed in you programming environment.
 
 ## Acknowledgements
 This project was created using the [shablona template](https://github.com/uwescience/shablona).
