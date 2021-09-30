@@ -14,10 +14,9 @@
 If you use `pcarpet` in a scientific publication, please cite Sirmpilatze et al 2021 (preprint with doi coming soon)
 
 **Links:**
-1. Reference paper
-2. Associated dataset
-3. Documentation
-4. Example jupyter notebook
+1. Reference paper (doi coming soon)
+2. Associated dataset (doi coming soon)
+3. [Documentation](https://pcarpet.readthedocs.io/en/latest/)
 
 ## Rationale
 A 'carpet plot' is a 2d representation of fMRI data (voxels x time), very similar to 'The Plot' described by Jonathan D Power ([Power 2017](https://www.sciencedirect.com/science/article/abs/pii/S1053811916303871?via%3Dihub)). 
