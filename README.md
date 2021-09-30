@@ -14,10 +14,19 @@
 If you use `pcarpet` in a scientific publication, please cite Sirmpilatze et al 2021 (preprint with doi coming soon)
 
 **Links:**
+
 1. Reference paper (doi coming soon)
 2. Associated dataset (doi coming soon)
 3. [Documentation](https://pcarpet.readthedocs.io/en/latest/)
 
+**Overview:**
+
+- [Rationale](#rationale) 
+- [How it works](#how) 
+- [Installation](#install) 
+- [Usage](#use) 
+
+<a name="rationale"></a>
 ## Rationale
 A 'carpet plot' is a 2d representation of fMRI data (voxels x time), very similar to 'The Plot' described by Jonathan D Power ([Power 2017](https://www.sciencedirect.com/science/article/abs/pii/S1053811916303871?via%3Dihub)). 
 This visual representation of fMRI data is suited for identifying wide-spread signal fluctutations 
@@ -27,6 +36,7 @@ which often come from non-neural sources (e.g. head motion).
 That said, the carpet plot can also reveal 'real' neural activity, especially when the activity is slow and synchronous, as is the case for **anesthesia-induced burst-suppression** (Sirmpiltze et al. 2021).
 The `pcarpet` package implements the analytical pipeline used in the Sirmpiltze et al. 2021 paper to identify instances of burst-suppression in anesthetized humans, nonhuman primates, and rats.
 
+<a name="how"></a>
 ## How it works
 The pipeline consists of the following steps:
 
@@ -41,6 +51,7 @@ The pipeline consists of the following steps:
 
 The above image corresponds to an instance of burst-suppression in a female long-tailed macaque (*Macaca fascicularis*) anesthetized with isoflurane. The carpet plot (using a cortical mask) shows a wide-spread, slow, quasi-periodic signal fluctuation, which is well captured by PC1. PC1 is positively correlated with most cortical voxel timeseries, resulting in a heavily asymmetric distribution of correlation coefficients (*r*), while PCs 2-4 show symmetric *r* histograms centered on zero. This property can be quantified by taking the median of carpet-wide *r* values (bottom right). According to the terminology introduced in Sirmpilatze et al. 2021, PC1 is an 'asymmetric PC`. Under the right circumstances, the presence of an asymmetric PC in a cortical carpet plot can be an fMRI signature of burst-suppression, with the brain-wide distribution of the asymmetric PC representing a map of burst-suppression (see manuscript for details).
 
+<a name="install"></a>
 ## Installation
 
 ### a. pip
@@ -70,6 +81,7 @@ If you are having issues with resolving package dependencies, you can create a v
 4. Navigate to the directory where the `environment.yml` is stored and run `conda env create -f environment.yml`
 5. Activate the environment with `conda activate pcarpet-env` (Note: you will always have to activate `pcarpet-env` before using `pcarpet`)
 
+<a name="use"></a>
 ## Usage
 Running `pcarpet` only requires 3 arguments (paths):
 
