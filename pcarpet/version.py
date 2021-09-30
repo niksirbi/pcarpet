@@ -62,5 +62,5 @@ MICRO = _version_micro
 VERSION = __version__
 PACKAGE_DATA = {'pcarpet': [pjoin('data', '*')]}
 REQUIRES = ['numpy', 'scipy', 'matplotlib', 'pandas',
-            'scikit-learn', 'nibabel', 'ipython']
+            'scikit-learn', 'nibabel']
 PYTHON_REQUIRES = ">= 3.6"

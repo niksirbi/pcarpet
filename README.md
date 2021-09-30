@@ -67,7 +67,6 @@ Pip will try to ensure that the following requirements are satisfied:
 5. [pandas](https://pandas.pydata.org/)
 6. [scikit-learn](https://scikit-learn.org/stable/)
 7. [nibabel](https://nipy.org/nibabel/)
-8. [ipython](https://ipython.org/)
 
 ### b. Anaconda
 If you are having issues with resolving package dependencies, you can create a virtual environment using [Anaconda](https://www.anaconda.com/products/individual):
