@@ -1,5 +1,5 @@
 # pcarpet
-[![Build Status](https://travis-ci.org/niksirbi/pcarpet.svg?branch=master)](https://travis-ci.org/niksirbi/pcarpet)
+[![Documentation Status](https://readthedocs.org/projects/pcarpet/badge/?version=latest)](https://pcarpet.readthedocs.io/en/latest/?badge=latest)
 
 ![logo](images/logo.png)
 
