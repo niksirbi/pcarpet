@@ -1,5 +1,7 @@
 # pcarpet
 [![Documentation Status](https://readthedocs.org/projects/pcarpet/badge/?version=latest)](https://pcarpet.readthedocs.io/en/latest/?badge=latest)
+[![DOI](https://zenodo.org/badge/335618853.svg)](https://zenodo.org/badge/latestdoi/335618853)
+
 
 ![logo](images/logo.png)
 
