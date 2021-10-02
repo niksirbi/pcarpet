@@ -92,7 +92,7 @@ MyData = pcarpet.Dataset(fmri_file, mask_file, output_folder)
 MyData.run_pcarpet()
 ```
 
-Detailed instructions on running `pcarpet` are available as a [jupyter notebook](doc/example_usage.ipynb). The notebook runs `pcarpet` on some example data, either in a single step (as above) or by separately calling the various parts of the pipeline. It also explains the various optional arguments and the outputs of the pipeline. If you wish to run the notebook locally, make sure that [jupyter](https://jupyter.org/) is installed in you programming environment.
+Detailed instructions on running `pcarpet` are available as a [jupyter notebook](doc/example_usage.ipynb). The notebook runs `pcarpet` on some example data, either in a single step (as above) or by separately calling the various parts of the pipeline. It also explains the optional arguments and the outputs of the pipeline. If you wish to run the notebook locally, make sure that [jupyter](https://jupyter.org/) is installed in your programming environment.
 
 <a name="thanks"></a>
 ## Acknowledgements
