@@ -5,10 +5,9 @@ Welcome to pcarpet's documentation!
 
 **Author:** `Nikoloz Sirmpilatze <https://github.com/niksirbi>`_ (`German Primate Center <https://www.dpz.eu/>`_)
 
-**Citation:** [Sirmpilatze et al 2021](https://www.biorxiv.org/content/10.1101/2021.10.15.464515)
+**Citation:** `Sirmpilatze et al., 2021 <https://www.biorxiv.org/content/10.1101/2021.10.15.464515>`_
 
-For an overview of the project, please refer to the `README file 
-<https://github.com/niksirbi/pcarpet/blob/master/README.md>`_ in the Github repository.
+For an overview of the project, please refer to the `README file <https://github.com/niksirbi/pcarpet/blob/master/README.md>`_ in the Github repository.
 
 
 Contents:

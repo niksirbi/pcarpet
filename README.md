@@ -32,11 +32,11 @@ Sirmpilatze N, Mylius J, Ortiz-Rios M, Baudewig J, Paasonen J, Golkowski D, Ranf
 ## Rationale
 A 'carpet plot' is a 2d representation of fMRI data (voxels x time), very similar to 'The Plot' described by Jonathan D Power ([Power 2017](https://www.sciencedirect.com/science/article/abs/pii/S1053811916303871?via%3Dihub)). 
 This visual representation of fMRI data is suited for identifying wide-spread signal fluctutations 
-([Aquino et al. 2020](https://www.sciencedirect.com/science/article/pii/S1053811920301014)), 
+([Aquino et al., 2020](https://www.sciencedirect.com/science/article/pii/S1053811920301014)), 
 which often come from non-neural sources (e.g. head motion).
 
-That said, the carpet plot can also reveal 'real' neural activity, especially when the activity is slow and synchronous, as is the case for **anesthesia-induced burst-suppression** ([Sirmpiltze et al. 2021](https://www.biorxiv.org/content/10.1101/2021.10.15.464515)).
-The `pcarpet` package implements the analytical pipeline used in the [Sirmpiltze et al. 2021](https://www.biorxiv.org/content/10.1101/2021.10.15.464515) paper to identify instances of burst-suppression in anesthetized humans, nonhuman primates, and rats.
+That said, the carpet plot can also reveal 'real' neural activity, especially when the activity is slow and synchronous, as is the case for **anesthesia-induced burst-suppression** ([Sirmpiltze et al., 2021](https://www.biorxiv.org/content/10.1101/2021.10.15.464515)).
+The `pcarpet` package implements the analytical pipeline used in the [Sirmpiltze et al., 2021](https://www.biorxiv.org/content/10.1101/2021.10.15.464515) paper to identify instances of burst-suppression in anesthetized humans, nonhuman primates, and rats.
 
 <a name="how"></a>
 ## How it works
