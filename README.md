@@ -9,13 +9,16 @@
 
 **Author:** [Nikoloz Sirmpilatze](https://github.com/niksirbi) ([German Primate Center](https://www.dpz.eu/))
 
-**Citing pcarpet:** If you use `pcarpet` in a scientific publication, please cite Sirmpilatze et al 2021 (preprint with doi coming soon)
+**Citing pcarpet:** If you use `pcarpet` in a scientific publication, please cite the following manuscript preprint:
+
+Sirmpilatze N, Mylius J, Ortiz-Rios M, Baudewig J, Paasonen J, Golkowski D, Ranft A, Ilg R, Gröhn O, Boretius S. 2021. *Spatial signatures of anesthesia-induced burst-suppression differ between primates and rodents.* bioRxiv. doi:10.1101/2021.10.15.464515
+
 
 **Links:**
 
-1. Reference paper (doi coming soon)
-2. Associated dataset (doi coming soon)
-3. [Documentation](https://pcarpet.readthedocs.io/en/latest/)
+1. [Documentation](https://pcarpet.readthedocs.io/en/latest/)
+2. [Preprint on bioRxiv](https://www.biorxiv.org/content/10.1101/2021.10.15.464515)
+
 
 **Overview:**
 
@@ -32,8 +35,8 @@ This visual representation of fMRI data is suited for identifying wide-spread si
 ([Aquino et al. 2020](https://www.sciencedirect.com/science/article/pii/S1053811920301014)), 
 which often come from non-neural sources (e.g. head motion).
 
-That said, the carpet plot can also reveal 'real' neural activity, especially when the activity is slow and synchronous, as is the case for **anesthesia-induced burst-suppression** (Sirmpiltze et al. 2021).
-The `pcarpet` package implements the analytical pipeline used in the Sirmpiltze et al. 2021 paper to identify instances of burst-suppression in anesthetized humans, nonhuman primates, and rats.
+That said, the carpet plot can also reveal 'real' neural activity, especially when the activity is slow and synchronous, as is the case for **anesthesia-induced burst-suppression** ([Sirmpiltze et al. 2021](https://www.biorxiv.org/content/10.1101/2021.10.15.464515)).
+The `pcarpet` package implements the analytical pipeline used in the [Sirmpiltze et al. 2021](https://www.biorxiv.org/content/10.1101/2021.10.15.464515) paper to identify instances of burst-suppression in anesthetized humans, nonhuman primates, and rats.
 
 <a name="how"></a>
 ## How it works
