@@ -3,9 +3,9 @@ from os.path import join as pjoin
 
 # Format expected by setup.py and doc/source/conf.py: string of form "X.Y.Z"
 _version_major = 0
-_version_minor = 1
-_version_micro = 2  # use '' for first of series, number for 1 and above
-_version_extra = 'dev'
+_version_minor = 2
+_version_micro = ''  # use '' for first of series, number for 1 and above
+_version_extra = ''
 # _version_extra = ''  # Uncomment this for full releases
 
 # Construct full version string from these.
@@ -34,7 +34,7 @@ pcarpet
 ========
 `pcarpet` is a small python package that creates a **carpet plot** from fMRI data and decomposes it with **PCA**.
 
-**Citation:** Sirmpilatze et al 2021 (preprint with doi coming soon)
+**Citation:** Sirmpilatze et al. eLife 2022;11:e74813. DOI: https://doi.org/10.7554/eLife.74813
 
 For an overview of the project, please refer to the `README file 
 <https://github.com/niksirbi/pcarpet/blob/master/README.md>`_ in the Github repository 
@@ -69,4 +69,4 @@ VERSION = __version__
 PACKAGE_DATA = {'pcarpet': [pjoin('data', '*')]}
 REQUIRES = ['numpy', 'scipy', 'matplotlib', 'pandas',
             'scikit-learn', 'nibabel']
-PYTHON_REQUIRES = ">= 3.6"
+PYTHON_REQUIRES = ">= 3.7"
