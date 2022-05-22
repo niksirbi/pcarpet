@@ -7,4 +7,5 @@ dist/
 pcarpet.egg*
 auto_examples/
 gen_api/
+.vscode/
 .ipynb_checkpoints
