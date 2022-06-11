@@ -1,5 +1,6 @@
 # pcarpet
 [![Documentation Status](https://readthedocs.org/projects/pcarpet/badge/?version=latest)](https://pcarpet.readthedocs.io/en/latest/?badge=latest)
+[![PyPI version](https://badge.fury.io/py/pcarpet.svg)](https://badge.fury.io/py/pcarpet)
 [![DOI](https://zenodo.org/badge/335618853.svg)](https://zenodo.org/badge/latestdoi/335618853)
 
 
