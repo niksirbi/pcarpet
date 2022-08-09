@@ -527,10 +527,9 @@ class Dataset(object):
 
         # Save figure
         plotname = 'fPCs_carpet_corr_report'
-        plt.savefig(os.path.join(self.output_dir,
-                                 f'{plotname}.png'), dpi=128)
-        plt.savefig(os.path.join(self.output_dir,
-                                 f'{plotname}.svg'))
+        plt.savefig(os.path.join(self.output_dir, f'{plotname}.png'),
+                    facecolor='w', dpi=128)
+        plt.savefig(os.path.join(self.output_dir, f'{plotname}.svg'))
         print(f"Visual report generated and saved as {plotname}.")
 
     def run_pcarpet(self, **kwargs):
