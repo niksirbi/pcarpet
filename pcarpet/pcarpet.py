@@ -106,8 +106,11 @@ class Dataset(object):
 
         Parameters
         ----------
-        fmri_file : str
+        fmri_file : str or list of str
             Path to 4d (3d + time) functional MRI data in NIFTI format.
+            If a list of paths is provided, the data will be concatenated,
+            therefore the data must have the same dimensions and coordinate
+            space.
         mask_file : str
             Path to 3d mask in NIFTI format (e.g. cortical mask).
             Must have same coordinate space and data matrix as :fmri:
@@ -116,7 +119,8 @@ class Dataset(object):
             If it doesn't exist, it's created.
         """
 
-        self.fmri_file = fmri_file
+        self.fmri_file = [fmri_file] if type(fmri_file) == str else fmri_file
+        self.n_fmri_files = len(fmri_file)
         self.mask_file = mask_file
         # Create output directory if it doesn't exist
         if not os.path.isdir(output_dir):
@@ -127,7 +131,8 @@ class Dataset(object):
         self.output_dir = output_dir
 
         print("\nInitialized Dataset object:")
-        print(f"\tfMRI file: {fmri_file}")
+        print(f"\tNumber of fMRI files passed: {self.n_fmri_files}")
+        map(print, [f"\tfMRI file: {f}" for f in fmri_file])
         print(f"\tMask file: {mask_file}")
         print(f"\tOutput directory: {output_dir}")
 
@@ -137,14 +142,19 @@ class Dataset(object):
 
         print("Reading data...")
         # Check if input files exist and try importing them with nibabel
-        if os.path.isfile(self.fmri_file):
-            try:
-                fmri_nifti = nib.load(self.fmri_file)
-            except IOError:
-                print(f"Could not load {self.fmri_file} using nibabel.")
-                print("Make sure it's a valid NIFTI file.")
-        else:
-            print(f"Could not find {self.fmri_file} file.")
+        fmri_niftis = []
+        for fmri_file in self.fmri_file:
+            if os.path.isfile(fmri_file):
+                try:
+                    fmri_nifti = nib.load(fmri_file)
+                    fmri_niftis.append(fmri_nifti)
+                except IOError:
+                    print(f"Could not load {fmri_file} using nibabel.")
+                    print("Make sure it's a valid NIFTI file.")
+            else:
+                print(f"Could not find {self.fmri_file} file.")
+        assert len(fmri_niftis) == self.n_fmri_files, \
+            "Number of fMRI files read does not match number of files passed."
 
         if os.path.isfile(self.mask_file):
             try:
@@ -156,24 +166,33 @@ class Dataset(object):
             print(f"Could not find {self.mask_file} file.")
 
         # Ensure that data dimensions are correct
-        data = fmri_nifti.get_fdata()
         mask = mask_nifti.get_fdata()
-        print(f"\tfMRI data read: dimensions {data.shape}")
         print(f"\tMask read: dimensions {mask.shape}")
-        if len(data.shape) != 4:
-            raise ValueError('fMRI must be 4-dimensional!')
         if len(mask.shape) != 3:
             raise ValueError('Mask must be 3-dimensional!')
-        if data.shape[:3] != mask.shape:
-            raise ValueError('fMRI and mask must be in the same space!')
 
-        # read data dimensions, header, and affine
-        self.x, self.y, self.z, self.t = data.shape
-        self.header = fmri_nifti.header
-        self.affine = fmri_nifti.affine
+        data_list = [fmri_nifti.get_fdata() for fmri_nifti in fmri_niftis]
+        volumes = [data.shape[3] for data in data_list]
+        for data_run in data_list:
+            print(f"\tfMRI data read: dimensions {data_run.shape}")
+            if len(data_run.shape) != 4:
+                raise ValueError('fMRI must be 4-dimensional!')
+            if data_run.shape[:3] != mask.shape:
+                raise ValueError('fMRI and mask must be in the same space!')
 
-        # store data and mask variables as object attributes
-        self.data = data
+        # read data space dimensions, header, and affine
+        # (assumes all runs have same dimensions and coordinate space)
+        self.header = fmri_niftis[0].header
+        self.affine = fmri_niftis[0].affine
+        self.x, self.y, self.z = data_list[0].shape[:3]
+
+        # concatenate data across runs
+        self.data = np.concatenate(data_list, axis=3)
+        self.t = self.data.shape[3]
+        print(f"\tConcatenated fMRI data: dimensions {self.data.shape}")
+
+        # store volumes and mask variables as object attributes
+        self.volumes = volumes
         self.mask = mask
         return
 
@@ -200,20 +219,27 @@ class Dataset(object):
             Default: False
         """
 
-        # compute fMRI data mean, std, and tSNR across time
-        data_mean = self.data.mean(axis=-1, keepdims=True)
-        data_std = self.data.std(axis=-1, keepdims=True)
-        data_tsnr = data_mean / (data_std + EPSILON)
-
-        # Mask fMRI data array with 'mask'
-        # Also mask voxels below tSNR threshold (if given)
+        # Convert anatomical mask into 4D (3D + time)
         mask = self.mask < 0.5
         mask_4d = np.repeat(mask[:, :, :, np.newaxis], self.t, axis=3)
+
+        # start and end indices of each fMRI run
+        start = np.cumsum([0] + self.volumes)[:-1]
+        end = np.cumsum(self.volumes)
+
+        # Mask voxels with low tSNR
+        # (tSNR is calculated separately for each run)
         tsnr_mask_4d = np.zeros(mask_4d.shape, dtype=bool)
         if tSNR_thresh is not None:
-            tsnr_mask = data_tsnr.squeeze() < tSNR_thresh
-            tsnr_mask_4d = np.repeat(tsnr_mask[:, :, :, np.newaxis],
-                                     self.t, axis=3)
+            for r in range(self.n_fmri_files):
+                run_mean = self.data[:, :, :, start[r]:end[r]].mean(axis=-1)
+                run_std = self.data[:, :, :, start[r]:end[r]].std(axis=-1)
+                run_tsnr = run_mean / (run_std + EPSILON)
+                run_tsnr_mask = run_tsnr.squeeze() < tSNR_thresh
+                tsnr_mask_4d[:, :, :, start[r]:end[r]] = np.repeat(
+                    run_tsnr_mask[:, :, :, np.newaxis], self.volumes[r], axis=3)
+
+        # Mask fMRI data with anatomical mask and tSNR mask
         data_masked = np.ma.masked_where(mask_4d | tsnr_mask_4d, self.data)
 
         # Reshape data in 2-d (voxels x time)
@@ -227,8 +253,10 @@ class Dataset(object):
         carpet = data_2d[indices_valid, :].data
         print(f"Carpet matrix created with shape {carpet.shape}.")
 
-        # Normalize carpet (z-score)
-        carpet = zscore(carpet, axis=1)
+        # Normalize carpet (z-score) across time
+        # separately for each fMRI run
+        for r in range(self.n_fmri_files):
+            carpet[:, start[r]:end[r]] = zscore(carpet[:, start[r]:end[r]], axis=1)
         print("Carpet normalized to zero-mean unit-variance.")
 
         # Re-order carpet plot based on correlation with the global signal
