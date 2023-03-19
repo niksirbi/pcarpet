@@ -257,6 +257,8 @@ class Dataset(object):
         # separately for each fMRI run
         for r in range(self.n_fmri_files):
             carpet[:, start[r]:end[r]] = zscore(carpet[:, start[r]:end[r]], axis=1)
+        # Replace NaNs with zeros
+        carpet = np.nan_to_num(carpet)
         print("Carpet normalized to zero-mean unit-variance.")
 
         # Re-order carpet plot based on correlation with the global signal
@@ -558,6 +560,7 @@ class Dataset(object):
         plt.savefig(os.path.join(self.output_dir, f'{plotname}.png'),
                     facecolor='w', dpi=128)
         plt.savefig(os.path.join(self.output_dir, f'{plotname}.svg'))
+        plt.close(fig)
         print(f"Visual report generated and saved as {plotname}.")
 
     def run_pcarpet(self, **kwargs):
