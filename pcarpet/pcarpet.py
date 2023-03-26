@@ -254,9 +254,13 @@ class Dataset(object):
         print(f"Carpet matrix created with shape {carpet.shape}.")
 
         # Normalize carpet (z-score) across time
-        # separately for each fMRI run
         for r in range(self.n_fmri_files):
-            carpet[:, start[r]:end[r]] = zscore(carpet[:, start[r]:end[r]], axis=1)
+            # De-meaning separately for each fMRI run
+            carpet[:, start[r]:end[r]] = carpet[:, start[r]:end[r]] - np.mean(
+                carpet[:, start[r]:end[r]], axis=1, keepdims=True)
+        # Divide by standard deviation jointly across all fMRI runs
+        carpet = carpet / np.std(carpet, axis=1, keepdims=True)
+
         # Replace NaNs with zeros
         carpet = np.nan_to_num(carpet)
         print("Carpet normalized to zero-mean unit-variance.")
