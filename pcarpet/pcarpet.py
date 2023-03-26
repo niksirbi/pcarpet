@@ -409,11 +409,11 @@ class Dataset(object):
         print(f"First {self.ncomp} PCs correlated with fMRI data.")
         return
 
-    def plot_report(self, TR='auto'):
+    def plot_report(self, TR='auto', save_svg=True):
         """ Plots a report of the results, including the carpet plot,
         the first ncomp PCs (fPCs), their correlation with the carpet,
         and their explained variance ratios. The plot image is saved
-        in '.png' (raster) and '.svg' (vector) formats.
+        in '.png' (raster) and, oprionally, '.svg' (vector) formats.
 
         Parameters
         ----------
@@ -422,6 +422,9 @@ class Dataset(object):
             attempts to read TR from the fMRI header. This can be
             bypassed by explicitly passing TR as a float.
             Default: 'auto'
+        save_svg : bool
+            If True, the plot is saved in '.svg' format in addition
+            to '.png'. Default: True
         """
 
         if type(TR) in [int, float]:
@@ -432,6 +435,8 @@ class Dataset(object):
             print(f"TR of {self.TR:.3f} seconds read from fMRI header")
         else:
             raise ValueError("TR must be a float or 'auto'")
+
+        self.save_svg = save_svg
 
         fig = plt.figure(figsize=(12, 10))
         fig.subplots_adjust(left=0.05, right=0.95, hspace=0.1,
@@ -559,7 +564,8 @@ class Dataset(object):
         plotname = 'fPCs_carpet_corr_report'
         plt.savefig(os.path.join(self.output_dir, f'{plotname}.png'),
                     facecolor='w', dpi=128)
-        plt.savefig(os.path.join(self.output_dir, f'{plotname}.svg'))
+        if self.save_svg:
+            plt.savefig(os.path.join(self.output_dir, f'{plotname}.svg'))
         plt.close(fig)
         print(f"Visual report generated and saved as {plotname}.")
 
@@ -606,12 +612,14 @@ class Dataset(object):
             attempts to read the TR from the fMRI header. This can be
             bypassed by explicitly passing TR as a float.
             Default: 'auto'
+        save_svg : boolean
+            Whether to also save the visual report as an SVG file.
         """
 
         # Define default options in a dictionary
         options = {'tSNR_thresh': 15.0, 'reorder_carpet': True,
                    'save_carpet': False, 'save_pca_scores': False,
-                   'ncomp': 5, 'flip_sign': True, 'TR': 'auto'}
+                   'ncomp': 5, 'flip_sign': True, 'TR': 'auto', 'save_svg': True}
 
         # Override default if any of the options is given
         # explicitly as a keyword argument
@@ -630,4 +638,4 @@ class Dataset(object):
         self.correlate_with_carpet(ncomp=options['ncomp'],
                                    flip_sign=options['flip_sign'])
         self.correlate_with_fmri()
-        self.plot_report(TR=options['TR'])
+        self.plot_report(TR=options['TR'], save_svg=options['save_svg'])
