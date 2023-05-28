@@ -452,7 +452,7 @@ class Dataset(object):
                                rowspan=5, colspan=3)
         carpet_plot = ax1.imshow(self.carpet, interpolation='none',
                                  aspect='auto', cmap='Greys_r',
-                                 vmin=-2, vmax=2)
+                                 vmin=-2, vmax=2, rasterized=True)
         ax1.set_xlabel(f'Time ({self.carpet.shape[1]} TRs)')
         ax1.set_ylabel(f'Space ({self.carpet.shape[0]} voxels)')
         ax1.set_xticks([])
@@ -498,7 +498,7 @@ class Dataset(object):
         ax3 = plt.subplot2grid((6 + npc, 5), (0, 3), rowspan=5, colspan=1)
         R_matrix = ax3.imshow(self.fPC_carpet_R, interpolation='none',
                               aspect='auto', cmap='coolwarm',
-                              vmin=-1, vmax=1)
+                              vmin=-1, vmax=1, rasterized=True)
         ax3.set_xticks(np.arange(npc))
         ax3.set_xticklabels(np.arange(1, npc + 1))
         ax3.set_yticks([])
