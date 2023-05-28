@@ -490,13 +490,15 @@ class Dataset(object):
                 axpc.set_title('Principal Components (PCs)')
         # Plot time scalebar
         tax = plt.subplot2grid((6 + npc, 5), (5, 0), rowspan=1, colspan=3)
-        tleft = self.t - 120 / self.TR
-        tright = self.t - 60 / self.TR
-        tcenter = self.t - 90 / self.TR
-        tax.plot([tleft, tright], [0.8, 0.8], lw=1.5, color='k')
-        tax.plot([tleft, tleft], [0.72, 0.88], lw=1.5, color='k')
-        tax.plot([tright, tright], [0.72, 0.88], lw=1.5, color='k')
-        tax.text(tcenter, 0.6, '1 minute', ha='center', va='top', color='k')
+        tbar_len_volumes = int(self.t / 10)  # 10% of total time
+        tbar_len_minutes = (tbar_len_volumes * self.TR) / 60
+        tleft = self.t - tbar_len_volumes
+        tcenter = self.t - 0.5 * tbar_len_volumes
+        tax.plot([tleft, self.t], [0.8, 0.8], lw=1.5, color='k', cap_style='butt')
+        tax.plot([tleft, tleft], [0.72, 0.88], lw=1.5, color='k', cap_style='butt')
+        tax.plot([self.t, self.t], [0.72, 0.88], lw=1.5, color='k', carpet_plot='butt')
+        tax.text(tcenter, 0.6, f'{tbar_len_minutes} minutes',
+                 ha='center', va='top', color='k')
         tax.set_xlim(0, self.t),
         tax.set_ylim(0, 1)
         tax.axis('off')
