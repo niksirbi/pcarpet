@@ -455,7 +455,11 @@ class Dataset(object):
                                  vmin=-2, vmax=2, rasterized=True)
         ax1.set_xlabel(f'Time ({self.carpet.shape[1]} TRs)')
         ax1.set_ylabel(f'Space ({self.carpet.shape[0]} voxels)')
-        ax1.set_xticks([])
+
+        # Place xticks reporting minutes at run borders
+        run_borders = np.cumsum([0] + self.volumes)
+        ax1.set_xticks(run_borders)
+        ax1.set_xticklabels([int(t / 60) for t in run_borders * self.TR])
         ax1.set_yticks([])
         ax1.set_title('Carpet plot: normalized BOLD (z-score)')
         # Plot carpet colorbar in a separate axis
@@ -471,9 +475,13 @@ class Dataset(object):
         for i in range(npc):
             axpc = plt.subplot2grid((6 + npc, 5), (6 + i, 0), colspan=3)
             pc = self.fPCs[self.fPCs.columns[i]]
-            axpc.plot(pc, color='0.2', lw=1.5)
+            axpc.plot(pc, color='0.2', lw=1)
             axpc.set_ylim(ymin, ymax)
             axpc.set_xlim(0, self.t)
+            # Mark run borders with vertical lines
+            if len(run_borders) > 2:
+                for r in run_borders[1:-1]:
+                    ax1.axvline(r, color='k', linestyle='--', lw=1)
             axpc.axis('off')
             axpc_coords = get_axis_coords(fig, axpc)
             fig.text(axpc_coords['xmin'] - 0.015, axpc_coords['ycen'],
