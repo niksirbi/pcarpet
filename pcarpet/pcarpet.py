@@ -279,6 +279,8 @@ class Dataset(object):
             print("Carpet saved as 'carpet.npy'.")
 
         self.carpet = carpet
+        self.start = start
+        self.end = end
         return
 
     def fit_pca2carpet(self, save_pca_scores=False):
@@ -317,6 +319,9 @@ class Dataset(object):
         """ Correlates the first ncomp principal components (PCs)
         with all carpet voxel time-series. Saves the correlation matrix.
 
+        For multi-run fMRI data, the correlation is calculated
+        separately for each run and then averaged across runs.
+
         Parameters
         ----------
         ncomp : int
@@ -346,8 +351,16 @@ class Dataset(object):
         fPCs.to_csv(os.path.join(self.output_dir, 'fPCs.csv'), index=False)
 
         # Correlate fPCs with carpet matrix
-        fPC_carpet_R = pearsonr_2d(self.carpet, fPCs.values.T)
-        # Save correlation matrix (voxels x ncom) as npy
+        # First separately for each fMRI run, then average
+        all_runs_R = np.zeros((self.carpet.shape[0], self.ncomp, self.n_fmri_files))
+        for r in range(self.n_fmri_files):
+            start, end = self.start[r], self.end[r]
+            all_runs_R[:, :, r] = pearsonr_2d(
+                self.carpet[:, start:end],
+                fPCs.values.T[:, start:end]
+            )
+        fPC_carpet_R = np.mean(all_runs_R, axis=-1)
+        # Save correlation matrix (voxels x ncomp) as npy
         np.save(os.path.join(self.output_dir, 'fPCs_carpet_corr.npy'),
                 fPC_carpet_R)
         print(f"First {ncomp} PCs correlated with carpet.")
@@ -392,12 +405,23 @@ class Dataset(object):
         first ncomp PCs (fPCs) with the original 4d fMRI dataset
         and saves the resulting correlation maps as a 4d NIFTI file
         (3d space + ncomp).
+
+        For multi-run fMRI data, the correlation is calculated
+        separately for each run and then averaged across runs.
         """
 
         # Reshape 4d fMRI data into a 2d (voxels * time) matrix
         fmri_2d = self.data.reshape((-1, self.t))
-        # Correlate with PCs
-        fPC_fmri_R = pearsonr_2d(fmri_2d, self.fPCs.values.T)
+        # Correlate with PCs, fist separately for each run, then average
+        n_voxels = self.x * self.y * self.z
+        all_runs_R = np.zeros((n_voxels, self.ncomp, self.n_fmri_files))
+        for r in range(self.n_fmri_files):
+            start, end = self.start[r], self.end[r]
+            all_runs_R[:, :, r] = pearsonr_2d(
+                fmri_2d[:, start:end],
+                self.fPCs.values.T[:, start:end]
+            )
+        fPC_fmri_R = np.mean(all_runs_R, axis=-1)
         # Reshape correlation to 4d (3d space * components)
         fPC_fmri_R = fPC_fmri_R.reshape((self.x, self.y, self.z, self.ncomp))
         # Create appropriate NIFTI header
@@ -453,7 +477,7 @@ class Dataset(object):
         carpet_plot = ax1.imshow(self.carpet, interpolation='none',
                                  aspect='auto', cmap='Greys_r',
                                  vmin=-2, vmax=2, rasterized=True)
-        ax1.set_xlabel(f'Time (minutes)')
+        ax1.set_xlabel('Time (minutes)')
         ax1.set_ylabel(f'Space ({self.carpet.shape[0]} voxels)')
 
         # Place xticks reporting minutes at run borders
