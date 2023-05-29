@@ -453,7 +453,7 @@ class Dataset(object):
         carpet_plot = ax1.imshow(self.carpet, interpolation='none',
                                  aspect='auto', cmap='Greys_r',
                                  vmin=-2, vmax=2, rasterized=True)
-        ax1.set_xlabel(f'Time ({self.carpet.shape[1]} TRs)')
+        ax1.set_xlabel(f'Time (minutes)')
         ax1.set_ylabel(f'Space ({self.carpet.shape[0]} voxels)')
 
         # Place xticks reporting minutes at run borders
@@ -475,34 +475,19 @@ class Dataset(object):
         for i in range(npc):
             axpc = plt.subplot2grid((6 + npc, 5), (6 + i, 0), colspan=3)
             pc = self.fPCs[self.fPCs.columns[i]]
-            axpc.plot(pc, color='0.2', lw=1)
+            axpc.plot(pc, color='0.2', lw=1.5)
             axpc.set_ylim(ymin, ymax)
             axpc.set_xlim(0, self.t)
             # Mark run borders with vertical lines
             if len(run_borders) > 2:
                 for r in run_borders[1:-1]:
-                    ax1.axvline(r, color='k', linestyle='--', lw=1)
+                    axpc.axvline(r, color='k', linestyle='--', lw=1)
             axpc.axis('off')
             axpc_coords = get_axis_coords(fig, axpc)
             fig.text(axpc_coords['xmin'] - 0.015, axpc_coords['ycen'],
                      self.fPCs.columns[i], ha='right', va='center')
             if i == 0:
                 axpc.set_title('Principal Components (PCs)')
-        # Plot time scalebar
-        tax = plt.subplot2grid((6 + npc, 5), (5, 0), rowspan=1, colspan=3)
-        tbar_len_volumes = int(self.t / 10)  # 10% of total time
-        tbar_len_minutes = (tbar_len_volumes * self.TR) / 60
-        tleft = self.t - tbar_len_volumes
-        tcenter = self.t - 0.5 * tbar_len_volumes
-        tax.plot([tleft, self.t], [0.8, 0.8], lw=1.5, color='k', cap_style='butt')
-        tax.plot([tleft, tleft], [0.72, 0.88], lw=1.5, color='k', cap_style='butt')
-        tax.plot([self.t, self.t], [0.72, 0.88], lw=1.5, color='k', carpet_plot='butt')
-        tax.text(tcenter, 0.6, f'{tbar_len_minutes} minutes',
-                 ha='center', va='top', color='k')
-        tax.set_xlim(0, self.t),
-        tax.set_ylim(0, 1)
-        tax.axis('off')
-        tax.patch.set_alpha(0.0)
 
         # Plot fPC-carpet correlations as matrix
         ax3 = plt.subplot2grid((6 + npc, 5), (0, 3), rowspan=5, colspan=1)
